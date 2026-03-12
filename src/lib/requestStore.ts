@@ -10,6 +10,8 @@ export interface RequestUserDetails {
   email?: string;
 }
 
+export type SdDecision = "collected" | "pending" | "waived";
+
 export interface ConnectionRequest {
   id: string;
   utility: string;
@@ -23,6 +25,8 @@ export interface ConnectionRequest {
   submittedDocs?: string[];
   siteVisitDate?: string;
   userDetails?: RequestUserDetails;
+  sdDecision?: SdDecision;
+  sdWaiverProof?: string;
 }
 
 export const INITIAL_REQUESTS: ConnectionRequest[] = [

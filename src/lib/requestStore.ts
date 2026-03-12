@@ -50,7 +50,10 @@ function notify() {
 
 function getInitialStageIndex(workflowType: WorkflowType) {
   const stages = getWorkflowStages(workflowType);
-  if (workflowType === "power-regular") return Math.min(2, stages.length - 1);
+  if (workflowType === "power-regular") {
+    const spocApprovalIndex = stages.findIndex((s) => s.id === "spoc-approval");
+    return spocApprovalIndex >= 0 ? spocApprovalIndex : Math.min(1, stages.length - 1);
+  }
   return Math.min(1, stages.length - 1);
 }
 

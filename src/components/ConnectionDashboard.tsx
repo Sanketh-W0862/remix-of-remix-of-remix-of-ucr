@@ -1,0 +1,277 @@
+import { useState } from "react";
+import { motion } from "framer-motion";
+import {
+  Zap, Droplets, Clock, CheckCircle2, AlertCircle, Plus, BarChart3,
+  AlertTriangle, LogOut, RefreshCw, Calendar,
+} from "lucide-react";
+import WorkflowActionModal, { type WorkflowAction } from "./WorkflowActionModal";
+import { type WorkflowType, getWorkflowStages, getCurrentStage, getTimelineLabels } from "@/lib/workflows";
+import { useRequestStore } from "@/lib/requestStore";
+
+interface ConnectionDashboardProps {
+  onNewRequest: () => void;
+  onLogout?: () => void;
+}
+
+type DashFilter = "active" | "pending" | "completed";
+
+const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProps) => {
+  const { requests, advanceStage, clearRejection } = useRequestStore();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
+  const [activeAction, setActiveAction] = useState<WorkflowAction | null>(null);
+  const [dashFilter, setDashFilter] = useState<DashFilter>("active");
+
+  const handleActionClick = (reqId: string, action: WorkflowAction) => {
+    setActiveRequestId(reqId);
+    setActiveAction(action);
+    setModalOpen(true);
+  };
+
+  const handleActionSubmit = () => {
+    if (!activeRequestId) return;
+    advanceStage(activeRequestId);
+    setModalOpen(false);
+    setActiveRequestId(null);
+    setActiveAction(null);
+  };
+
+  // Compute counts dynamically
+  const completedRequests = requests.filter((r) => {
+    const stages = getWorkflowStages(r.workflowType);
+    return r.stageIndex >= stages.length - 1;
+  });
+  const pendingRequests = requests.filter((r) => {
+    const stages = getWorkflowStages(r.workflowType);
+    const stage = getCurrentStage(r.workflowType, r.stageIndex);
+    return r.stageIndex < stages.length - 1 && stage.userActionRequired;
+  });
+  const activeRequests = requests.filter((r) => {
+    const stages = getWorkflowStages(r.workflowType);
+    const stage = getCurrentStage(r.workflowType, r.stageIndex);
+    return r.stageIndex < stages.length - 1 && !stage.userActionRequired;
+  });
+
+  const stats = [
+    { label: "Active Requests", value: String(activeRequests.length), icon: <CheckCircle2 className="w-5 h-5" />, color: "text-success", bg: "bg-success/10", filter: "active" as DashFilter },
+    { label: "Pending Requests", value: String(pendingRequests.length), icon: <Clock className="w-5 h-5" />, color: "text-warning", bg: "bg-warning/10", filter: "pending" as DashFilter },
+    { label: "Completed", value: String(completedRequests.length), icon: <BarChart3 className="w-5 h-5" />, color: "text-primary", bg: "bg-primary/10", filter: "completed" as DashFilter },
+  ];
+
+  const filteredRequests =
+    dashFilter === "active" ? activeRequests :
+    dashFilter === "pending" ? pendingRequests :
+    completedRequests;
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-6xl mx-auto">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold font-display text-foreground">Dashboard</h1>
+          <p className="text-muted-foreground mt-1">Manage your utility connections</p>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={onNewRequest} className="btn-primary flex items-center gap-2">
+            <Plus className="w-4 h-4" /> New Request
+          </button>
+          {onLogout && (
+            <button onClick={onLogout} className="btn-secondary flex items-center gap-2 text-sm">
+              <LogOut className="w-4 h-4" /> Logout
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Stats as filter buttons */}
+      <div className="grid grid-cols-3 gap-4 mb-8">
+        {stats.map((stat, i) => (
+          <motion.button
+            key={stat.label}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1 }}
+            onClick={() => setDashFilter(stat.filter)}
+            className={`glass-card p-5 text-left transition-all ${dashFilter === stat.filter ? "ring-2 ring-primary" : "hover:ring-1 hover:ring-border"}`}
+          >
+            <div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center ${stat.color} mb-3`}>
+              {stat.icon}
+            </div>
+            <p className="text-2xl font-bold font-display text-foreground">{stat.value}</p>
+            <p className="text-sm text-muted-foreground">{stat.label}</p>
+          </motion.button>
+        ))}
+      </div>
+
+      {/* Requests */}
+      <div className="glass-card p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold font-display text-foreground capitalize">{dashFilter} Requests</h2>
+        </div>
+
+        {filteredRequests.length === 0 ? (
+          <div className="text-center py-12">
+            <CheckCircle2 className="w-12 h-12 text-success mx-auto mb-3" />
+            <p className="text-muted-foreground">No {dashFilter} requests.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {filteredRequests.map((req, i) => {
+              const stages = getWorkflowStages(req.workflowType);
+              const currentStage = getCurrentStage(req.workflowType, req.stageIndex);
+              const timelineLabels = getTimelineLabels(req.workflowType);
+              const isCompleted = req.stageIndex >= stages.length - 1;
+              const actionRequired = currentStage.userActionRequired && !isCompleted;
+              const hasRejection = !!req.rejectionReason;
+
+              const statusLabel = isCompleted ? "Connection Activated" : "In Process";
+              const statusClass = isCompleted ? "status-approved" : hasRejection ? "status-rejected" : actionRequired ? "bg-accent/10 text-accent" : "status-pending";
+
+              return (
+                <motion.div
+                  key={req.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className={`p-5 rounded-xl border transition-all ${
+                    hasRejection
+                      ? "border-destructive/40 bg-destructive/[0.03]"
+                      : actionRequired
+                        ? "border-accent/40 bg-accent/[0.03] shadow-[0_0_0_1px_hsl(var(--accent)/0.1)]"
+                        : "border-border hover:border-primary/20"
+                  }`}
+                >
+                  {/* Header row */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                        req.utility === "Power" ? "bg-primary/10" : "bg-info/10"
+                      }`}>
+                        {req.utility === "Power" ? (
+                          <Zap className="w-5 h-5 text-primary" />
+                        ) : (
+                          <Droplets className="w-5 h-5 text-info" />
+                        )}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-foreground">{req.id}</h3>
+                          {actionRequired && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-accent/15 text-accent">
+                              <AlertTriangle className="w-3 h-3" />
+                              Action Required
+                            </span>
+                          )}
+                          {hasRejection && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-destructive/15 text-destructive">
+                              <AlertCircle className="w-3 h-3" />
+                              Rejected
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {req.utility} • {req.type} • {req.space}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-1.5">
+                      <div className={`status-badge ${statusClass}`}>
+                        {statusLabel}
+                      </div>
+                      <span className="text-[10px] text-muted-foreground">{currentStage.label}</span>
+                    </div>
+                  </div>
+
+                  {/* Site visit date */}
+                  {req.siteVisitDate && (
+                    <div className="mb-3 p-2 rounded-lg bg-info/5 border border-info/10 flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-info" />
+                      <p className="text-xs text-info font-medium">Site Visit Scheduled for {req.siteVisitDate}</p>
+                    </div>
+                  )}
+
+                  {/* Timeline */}
+                  <div className="flex items-center gap-1">
+                    {stages.map((stage, si) => (
+                      <div key={stage.id} className="flex items-center flex-1 last:flex-none">
+                        <div
+                          className={`w-2.5 h-2.5 rounded-full flex-shrink-0 transition-colors ${
+                            si <= req.stageIndex ? "bg-primary" : "bg-muted"
+                          }`}
+                          title={stage.label}
+                        />
+                        {si < stages.length - 1 && (
+                          <div className={`flex-1 h-0.5 mx-0.5 rounded ${
+                            si < req.stageIndex ? "bg-primary" : "bg-muted"
+                          }`} />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex justify-between mt-1.5">
+                    <span className="text-[10px] text-muted-foreground">{timelineLabels[0]}</span>
+                    <span className="text-[10px] text-muted-foreground">{timelineLabels[timelineLabels.length - 1]}</span>
+                  </div>
+
+                  {/* Rejection Notice */}
+                  {hasRejection && (
+                    <div className="mt-3 p-3 rounded-lg bg-destructive/5 border border-destructive/10">
+                      <p className="text-xs text-destructive font-medium mb-1">⚠ Rejection Reason:</p>
+                      <p className="text-xs text-foreground/80">{req.rejectionReason}</p>
+                      <button
+                        onClick={() => clearRejection(req.id)}
+                        className="mt-2 inline-flex items-center gap-1 text-xs text-primary font-medium hover:underline"
+                      >
+                        <RefreshCw className="w-3 h-3" /> Re-submit documents
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Expiry notice */}
+                  {req.expiry && (
+                    <div className="mt-3 p-2 rounded-lg bg-warning/5 border border-warning/10">
+                      <p className="text-xs text-warning font-medium">⚠ Temporary — Expires: {req.expiry}</p>
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  {actionRequired && currentStage.actions && currentStage.actions.length > 0 && (
+                    <div className="mt-4 pt-3 border-t border-border/50 flex flex-wrap gap-2">
+                      {currentStage.actions.map((action) => (
+                        <button
+                          key={action.label}
+                          onClick={() => handleActionClick(req.id, action)}
+                          className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all active:scale-[0.97] ${
+                            action.type === "confirm" && action.label.includes("Deactivation")
+                              ? "bg-destructive/10 text-destructive hover:bg-destructive/20"
+                              : "bg-accent/10 text-accent hover:bg-accent/20"
+                          }`}
+                        >
+                          <AlertTriangle className="w-3.5 h-3.5" />
+                          {action.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Action Modal */}
+      {activeRequestId && activeAction && (
+        <WorkflowActionModal
+          open={modalOpen}
+          onClose={() => { setModalOpen(false); setActiveRequestId(null); setActiveAction(null); }}
+          onSubmit={handleActionSubmit}
+          requestId={activeRequestId}
+          action={activeAction}
+        />
+      )}
+    </motion.div>
+  );
+};
+
+export default ConnectionDashboard;

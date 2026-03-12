@@ -59,12 +59,14 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
 
     const stage = getCurrentStage(req.workflowType, req.stageIndex);
 
-    // SPOC at spoc-approval for power-regular or power-temporary → show SD decision modal
-    if (role === "spoc" && stage.id === "spoc-approval" &&
-        (req.workflowType === "power-regular" || req.workflowType === "power-temporary")) {
+    // SPOC SD decision gate for power workflows
+    const isSdGateStage = ["spoc-approval", "sd-decision", "sd-calculation"].includes(stage.id);
+    const isSdWorkflow = req.workflowType === "power-regular" || req.workflowType === "power-temporary";
+
+    if (role === "spoc" && isSdWorkflow && isSdGateStage) {
       setSdModalReqId(reqId);
-      setSdChoice(null);
-      setSdWaiverFile("");
+      setSdChoice(req.sdDecision ?? null);
+      setSdWaiverFile(req.sdWaiverProof ?? "");
       return;
     }
 

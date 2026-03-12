@@ -3,11 +3,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap, Droplets, CheckCircle2, Clock, AlertCircle, BarChart3,
   LogOut, FileText, XCircle, MessageSquare, ChevronDown, ChevronUp, CalendarIcon,
+  Upload, ShieldCheck,
 } from "lucide-react";
 import { format } from "date-fns";
 import type { UserRole } from "@/lib/roles";
 import { STAGE_ROLE_MAP } from "@/lib/roles";
-import { useRequestStore, type ConnectionRequest } from "@/lib/requestStore";
+import { useRequestStore, type ConnectionRequest, type SdDecision } from "@/lib/requestStore";
 import { getWorkflowStages, getCurrentStage, getTimelineLabels, getWorkflowLabel } from "@/lib/workflows";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -22,13 +23,16 @@ interface InternalDashboardProps {
 type DashFilter = "pending" | "all" | "completed";
 
 const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps) => {
-  const { requests, advanceStage, rejectRequest, scheduleSiteVisit } = useRequestStore();
+  const { requests, advanceStage, rejectRequest, scheduleSiteVisit, setSdDecision } = useRequestStore();
   const [rejectModalId, setRejectModalId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [dashFilter, setDashFilter] = useState<DashFilter>("pending");
   const [siteVisitReqId, setSiteVisitReqId] = useState<string | null>(null);
   const [siteVisitDate, setSiteVisitDate] = useState<Date | undefined>(undefined);
+  const [sdModalReqId, setSdModalReqId] = useState<string | null>(null);
+  const [sdChoice, setSdChoice] = useState<SdDecision | null>(null);
+  const [sdWaiverFile, setSdWaiverFile] = useState<string>("");
 
   // All requests where current stage belongs to this role and not completed
   const myPendingRequests = requests.filter((r) => {

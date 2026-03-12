@@ -113,11 +113,36 @@ export function useRequestStore() {
     notify();
   }, []);
 
+  const setSdDecision = useCallback((requestId: string, decision: SdDecision, waiverProof?: string) => {
+    globalRequests = globalRequests.map((r) => {
+      if (r.id !== requestId) return r;
+      const stages = getWorkflowStages(r.workflowType);
+      const updated = { ...r, sdDecision: decision, sdWaiverProof: waiverProof };
+
+      if (decision === "waived" || decision === "collected") {
+        // Skip SD payment + finance confirms stages, jump to next relevant stage
+        // Find the index of stages to skip past (sd-payment, finance-confirms)
+        const skipStageIds = ["sd-payment", "finance-confirms", "sd-decision"];
+        let targetIndex = r.stageIndex + 1;
+        while (targetIndex < stages.length && skipStageIds.includes(stages[targetIndex].id)) {
+          targetIndex++;
+        }
+        updated.stageIndex = Math.min(targetIndex, stages.length - 1);
+      } else {
+        // "pending" — advance to next stage normally (sd-payment will come)
+        updated.stageIndex = Math.min(r.stageIndex + 1, stages.length - 1);
+      }
+      return updated;
+    });
+    notify();
+  }, []);
+
   return {
     requests: globalRequests,
     advanceStage,
     rejectRequest,
     clearRejection,
     scheduleSiteVisit,
+    setSdDecision,
   };
 }

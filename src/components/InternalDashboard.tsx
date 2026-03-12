@@ -54,16 +54,36 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
     requests;
 
   const handleApprove = (reqId: string) => {
-    // Check if this is a site-visit stage for P&E or SPOC
     const req = requests.find((r) => r.id === reqId);
-    if (req && (role === "pne" || role === "spoc")) {
-      const stage = getCurrentStage(req.workflowType, req.stageIndex);
-      if (stage.id === "site-visit") {
-        setSiteVisitReqId(reqId);
-        return;
-      }
+    if (!req) return;
+
+    const stage = getCurrentStage(req.workflowType, req.stageIndex);
+
+    // SPOC at spoc-approval for power-regular or power-temporary → show SD decision modal
+    if (role === "spoc" && stage.id === "spoc-approval" &&
+        (req.workflowType === "power-regular" || req.workflowType === "power-temporary")) {
+      setSdModalReqId(reqId);
+      setSdChoice(null);
+      setSdWaiverFile("");
+      return;
     }
+
+    // Site visit scheduling for P&E
+    if ((role === "pne" || role === "spoc") && stage.id === "site-visit") {
+      setSiteVisitReqId(reqId);
+      return;
+    }
+
     advanceStage(reqId);
+  };
+
+  const handleSdSubmit = () => {
+    if (sdModalReqId && sdChoice) {
+      setSdDecision(sdModalReqId, sdChoice, sdChoice === "waived" ? sdWaiverFile : undefined);
+      setSdModalReqId(null);
+      setSdChoice(null);
+      setSdWaiverFile("");
+    }
   };
 
   const handleScheduleSiteVisit = () => {

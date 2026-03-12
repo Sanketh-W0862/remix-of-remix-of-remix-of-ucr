@@ -3,11 +3,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap, Droplets, CheckCircle2, Clock, AlertCircle, BarChart3,
   LogOut, FileText, XCircle, MessageSquare, ChevronDown, ChevronUp, CalendarIcon,
+  Upload, ShieldCheck,
 } from "lucide-react";
 import { format } from "date-fns";
 import type { UserRole } from "@/lib/roles";
 import { STAGE_ROLE_MAP } from "@/lib/roles";
-import { useRequestStore, type ConnectionRequest } from "@/lib/requestStore";
+import { useRequestStore, type ConnectionRequest, type SdDecision } from "@/lib/requestStore";
 import { getWorkflowStages, getCurrentStage, getTimelineLabels, getWorkflowLabel } from "@/lib/workflows";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -22,13 +23,16 @@ interface InternalDashboardProps {
 type DashFilter = "pending" | "all" | "completed";
 
 const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps) => {
-  const { requests, advanceStage, rejectRequest, scheduleSiteVisit } = useRequestStore();
+  const { requests, advanceStage, rejectRequest, scheduleSiteVisit, setSdDecision } = useRequestStore();
   const [rejectModalId, setRejectModalId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [dashFilter, setDashFilter] = useState<DashFilter>("pending");
   const [siteVisitReqId, setSiteVisitReqId] = useState<string | null>(null);
   const [siteVisitDate, setSiteVisitDate] = useState<Date | undefined>(undefined);
+  const [sdModalReqId, setSdModalReqId] = useState<string | null>(null);
+  const [sdChoice, setSdChoice] = useState<SdDecision | null>(null);
+  const [sdWaiverFile, setSdWaiverFile] = useState<string>("");
 
   // All requests where current stage belongs to this role and not completed
   const myPendingRequests = requests.filter((r) => {
@@ -50,16 +54,36 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
     requests;
 
   const handleApprove = (reqId: string) => {
-    // Check if this is a site-visit stage for P&E or SPOC
     const req = requests.find((r) => r.id === reqId);
-    if (req && (role === "pne" || role === "spoc")) {
-      const stage = getCurrentStage(req.workflowType, req.stageIndex);
-      if (stage.id === "site-visit") {
-        setSiteVisitReqId(reqId);
-        return;
-      }
+    if (!req) return;
+
+    const stage = getCurrentStage(req.workflowType, req.stageIndex);
+
+    // SPOC at spoc-approval for power-regular or power-temporary → show SD decision modal
+    if (role === "spoc" && stage.id === "spoc-approval" &&
+        (req.workflowType === "power-regular" || req.workflowType === "power-temporary")) {
+      setSdModalReqId(reqId);
+      setSdChoice(null);
+      setSdWaiverFile("");
+      return;
     }
+
+    // Site visit scheduling for P&E
+    if ((role === "pne" || role === "spoc") && stage.id === "site-visit") {
+      setSiteVisitReqId(reqId);
+      return;
+    }
+
     advanceStage(reqId);
+  };
+
+  const handleSdSubmit = () => {
+    if (sdModalReqId && sdChoice) {
+      setSdDecision(sdModalReqId, sdChoice, sdChoice === "waived" ? sdWaiverFile : undefined);
+      setSdModalReqId(null);
+      setSdChoice(null);
+      setSdWaiverFile("");
+    }
   };
 
   const handleScheduleSiteVisit = () => {
@@ -266,6 +290,18 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
                                 <span className="ml-2 text-info font-medium">{req.siteVisitDate}</span>
                               </div>
                             )}
+                            {req.sdDecision && (
+                              <div className="col-span-2">
+                                <span className="text-muted-foreground">SD Status:</span>
+                                <span className={`ml-2 font-medium ${
+                                  req.sdDecision === "waived" ? "text-warning" :
+                                  req.sdDecision === "collected" ? "text-success" : "text-accent"
+                                }`}>
+                                  {req.sdDecision === "waived" ? "Waived" :
+                                   req.sdDecision === "collected" ? "Already Collected" : "Pending Collection"}
+                                </span>
+                              </div>
+                            )}
                             {req.expiry && (
                               <div>
                                 <span className="text-muted-foreground">Expiry:</span>
@@ -368,6 +404,96 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
                 <button
                   onClick={handleScheduleSiteVisit}
                   disabled={!siteVisitDate}
+                  className="flex-1 gradient-bg text-primary-foreground px-6 py-3 rounded-xl font-semibold transition-all hover:opacity-90 disabled:opacity-50"
+                >
+                  Confirm
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* SD Decision Modal */}
+      <AnimatePresence>
+        {sdModalReqId && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          >
+            <div className="absolute inset-0 bg-foreground/40 backdrop-blur-sm" onClick={() => { setSdModalReqId(null); setSdChoice(null); setSdWaiverFile(""); }} />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative z-10 w-full max-w-md glass-card-elevated p-6"
+            >
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <ShieldCheck className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold font-display text-foreground">Security Deposit Decision</h3>
+                  <p className="text-sm text-muted-foreground">{sdModalReqId}</p>
+                </div>
+              </div>
+
+              <p className="text-sm text-muted-foreground mb-4">What is the status of the Security Deposit for this request?</p>
+
+              <div className="space-y-3">
+                {([
+                  { value: "collected" as SdDecision, label: "Already Collected", desc: "SD has already been collected from the customer.", color: "border-success/40 bg-success/5" },
+                  { value: "pending" as SdDecision, label: "Yet to be Collected", desc: "SD is pending — customer will need to pay and upload proof.", color: "border-accent/40 bg-accent/5" },
+                  { value: "waived" as SdDecision, label: "Waived Off", desc: "SD has been waived — attach email proof of waiver.", color: "border-warning/40 bg-warning/5" },
+                ]).map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setSdChoice(opt.value)}
+                    className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
+                      sdChoice === opt.value ? opt.color + " ring-2 ring-primary" : "border-border hover:border-primary/20"
+                    }`}
+                  >
+                    <p className="font-semibold text-sm text-foreground">{opt.label}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{opt.desc}</p>
+                  </button>
+                ))}
+              </div>
+
+              {sdChoice === "waived" && (
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-foreground mb-1.5">Email Proof of Waiver</label>
+                  <label className="flex flex-col items-center justify-center gap-2 p-5 rounded-xl border-2 border-dashed border-border hover:border-primary/40 cursor-pointer transition-colors bg-muted/30">
+                    {sdWaiverFile ? (
+                      <div className="flex items-center gap-2 text-sm text-foreground">
+                        <FileText className="w-4 h-4 text-primary" />
+                        {sdWaiverFile}
+                      </div>
+                    ) : (
+                      <>
+                        <Upload className="w-5 h-5 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">Click to upload waiver email proof</span>
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) setSdWaiverFile(e.target.files[0].name);
+                      }}
+                    />
+                  </label>
+                </div>
+              )}
+
+              <div className="flex gap-3 mt-6">
+                <button onClick={() => { setSdModalReqId(null); setSdChoice(null); setSdWaiverFile(""); }} className="btn-secondary flex-1">
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSdSubmit}
+                  disabled={!sdChoice || (sdChoice === "waived" && !sdWaiverFile)}
                   className="flex-1 gradient-bg text-primary-foreground px-6 py-3 rounded-xl font-semibold transition-all hover:opacity-90 disabled:opacity-50"
                 >
                   Confirm

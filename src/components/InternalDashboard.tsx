@@ -290,6 +290,18 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
                                 <span className="ml-2 text-info font-medium">{req.siteVisitDate}</span>
                               </div>
                             )}
+                            {req.sdDecision && (
+                              <div className="col-span-2">
+                                <span className="text-muted-foreground">SD Status:</span>
+                                <span className={`ml-2 font-medium ${
+                                  req.sdDecision === "waived" ? "text-warning" :
+                                  req.sdDecision === "collected" ? "text-success" : "text-accent"
+                                }`}>
+                                  {req.sdDecision === "waived" ? "Waived" :
+                                   req.sdDecision === "collected" ? "Already Collected" : "Pending Collection"}
+                                </span>
+                              </div>
+                            )}
                             {req.expiry && (
                               <div>
                                 <span className="text-muted-foreground">Expiry:</span>

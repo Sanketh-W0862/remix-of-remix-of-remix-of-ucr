@@ -35,7 +35,7 @@ const LoginStep = ({ onNext }: LoginStepProps) => {
   const [verificationStatus, setVerificationStatus] = useState<"idle" | "verifying" | "verified" | "failed">("idle");
   const [customerForm, setCustomerForm] = useState({
     customerName: "", contactPersonName: "", mobile: "", emailId: "",
-    gstin: "", gstAddress: "", pan: "", tan: "",
+    gstin: "", pan: "", tan: "",
     houseNumber: "", streetName: "", city: "", state: "", pinCode: "",
   });
   const [uploadedDocs, setUploadedDocs] = useState<Record<string, boolean>>({

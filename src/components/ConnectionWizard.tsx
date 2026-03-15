@@ -47,11 +47,34 @@ const ConnectionWizard = () => {
       }
     }
 
-    setWizardData((prev) => ({ ...prev, [stepKey]: data }));
+    const updatedData = { ...wizardData, [stepKey]: data };
+    setWizardData(updatedData);
+
+    // If utility step selected water only (no power), skip Load step → go to Submit
+    if (stepKey === "utility") {
+      const utilities = data.selectedUtilities as string[];
+      const isWaterOnly = utilities.length > 0 && utilities.every((u: string) => u === "water");
+      if (isWaterOnly) {
+        setCurrentStep(5); // Skip to Submit
+        return;
+      }
+    }
+
     setCurrentStep((prev) => prev + 1);
   };
 
-  const handleBack = () => setCurrentStep((prev) => prev - 1);
+  const handleBack = () => {
+    // If on Submit (step 5) and water-only was selected, go back to Utilities (step 3)
+    if (currentStep === 5 && wizardData.utility) {
+      const utilities = wizardData.utility.selectedUtilities as string[];
+      const isWaterOnly = utilities.length > 0 && utilities.every((u: string) => u === "water");
+      if (isWaterOnly) {
+        setCurrentStep(3);
+        return;
+      }
+    }
+    setCurrentStep((prev) => prev - 1);
+  };
 
   const handleSubmit = () => setShowDashboard(true);
 

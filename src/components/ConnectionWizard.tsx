@@ -50,11 +50,13 @@ const ConnectionWizard = () => {
     const updatedData = { ...wizardData, [stepKey]: data };
     setWizardData(updatedData);
 
-    // If utility step selected water only (no power), skip Load step → go to Submit
+    // Skip Load step for water-only OR prepaid/non-metered power (SP0002)
     if (stepKey === "utility") {
       const utilities = data.selectedUtilities as string[];
       const isWaterOnly = utilities.length > 0 && utilities.every((u: string) => u === "water");
-      if (isWaterOnly) {
+      const spaceId = updatedData.space?.spaceId;
+      const isPrepaidPower = spaceId === "SP0002" && utilities.includes("power");
+      if (isWaterOnly || isPrepaidPower) {
         setCurrentStep(5); // Skip to Submit
         return;
       }
@@ -64,11 +66,13 @@ const ConnectionWizard = () => {
   };
 
   const handleBack = () => {
-    // If on Submit (step 5) and water-only was selected, go back to Utilities (step 3)
+    // If on Submit (step 5) and load was skipped, go back to Utilities (step 3)
     if (currentStep === 5 && wizardData.utility) {
       const utilities = wizardData.utility.selectedUtilities as string[];
       const isWaterOnly = utilities.length > 0 && utilities.every((u: string) => u === "water");
-      if (isWaterOnly) {
+      const spaceId = wizardData.space?.spaceId;
+      const isPrepaidPower = spaceId === "SP0002" && utilities.includes("power");
+      if (isWaterOnly || isPrepaidPower) {
         setCurrentStep(3);
         return;
       }

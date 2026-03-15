@@ -47,7 +47,19 @@ const ConnectionWizard = () => {
       }
     }
 
-    setWizardData((prev) => ({ ...prev, [stepKey]: data }));
+    const updatedData = { ...wizardData, [stepKey]: data };
+    setWizardData(updatedData);
+
+    // If utility step selected water only (no power), skip Load step → go to Submit
+    if (stepKey === "utility") {
+      const utilities = data.selectedUtilities as string[];
+      const isWaterOnly = utilities.length > 0 && utilities.every((u: string) => u === "water");
+      if (isWaterOnly) {
+        setCurrentStep(5); // Skip to Submit
+        return;
+      }
+    }
+
     setCurrentStep((prev) => prev + 1);
   };
 

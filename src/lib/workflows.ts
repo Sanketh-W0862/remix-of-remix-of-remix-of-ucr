@@ -162,8 +162,8 @@ export const WORKFLOWS: Record<WorkflowType, WorkflowStage[]> = {
   "water-existing-meter": [
     { id: "submitted", label: "Submitted", userActionRequired: false },
     { id: "spoc-approval", label: "SPOC Approval", userActionRequired: false },
-    { id: "slotting", label: "Slotting", userActionRequired: false },
-    { id: "site-visit", label: "Site Visit & Issue Resolution", userActionRequired: false },
+    { id: "slotting", label: "Slot Selection (P&E)", userActionRequired: false },
+    { id: "pne-final-approval", label: "Final Approval (P&E)", userActionRequired: false },
     { id: "activated", label: "Water Activated", userActionRequired: false },
   ],
 

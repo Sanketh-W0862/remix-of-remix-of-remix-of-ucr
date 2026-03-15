@@ -8,22 +8,21 @@ export type WorkflowType =
   | "water-existing-meter"
   | "water-no-meter";
 
-export type SpaceMeterType = "water-meter" | "prepaid" | "postpaid" | "no-meter" | "temporary";
+export type PowerMeterType = "postpaid" | "prepaid" | "temporary";
+export type WaterMeterType = "existing" | "new";
 
 export interface SpaceMasterEntry {
   spaceId: string;
-  meterType: SpaceMeterType;
+  powerMeter: PowerMeterType;
+  waterMeter: WaterMeterType;
   label: string;
 }
 
 // Space Master Configuration
 export const SPACE_MASTER: SpaceMasterEntry[] = [
-  { spaceId: "SP0001", meterType: "water-meter", label: "Water Meter Exists" },
-  { spaceId: "SP0002", meterType: "prepaid", label: "Prepaid / Non-Metered" },
-  { spaceId: "SP0003", meterType: "water-meter", label: "Water Meter Exists" },
-  { spaceId: "SP0004", meterType: "postpaid", label: "Postpaid Meter" },
-  { spaceId: "SP0005", meterType: "no-meter", label: "No Meter Path" },
-  { spaceId: "SP0006", meterType: "temporary", label: "Temporary Power Connection" },
+  { spaceId: "SP0001", powerMeter: "postpaid", waterMeter: "existing", label: "Postpaid Power / Existing Water Meter" },
+  { spaceId: "SP0002", powerMeter: "prepaid", waterMeter: "new", label: "Prepaid Power / New Water Meter" },
+  { spaceId: "SP0003", powerMeter: "temporary", waterMeter: "new", label: "Temporary Power / New Water Meter" },
 ];
 
 export function getSpaceMeter(spaceId: string): SpaceMasterEntry | undefined {

@@ -63,7 +63,18 @@ const ConnectionWizard = () => {
     setCurrentStep((prev) => prev + 1);
   };
 
-  const handleBack = () => setCurrentStep((prev) => prev - 1);
+  const handleBack = () => {
+    // If on Submit (step 5) and water-only was selected, go back to Utilities (step 3)
+    if (currentStep === 5 && wizardData.utility) {
+      const utilities = wizardData.utility.selectedUtilities as string[];
+      const isWaterOnly = utilities.length > 0 && utilities.every((u: string) => u === "water");
+      if (isWaterOnly) {
+        setCurrentStep(3);
+        return;
+      }
+    }
+    setCurrentStep((prev) => prev - 1);
+  };
 
   const handleSubmit = () => setShowDashboard(true);
 

@@ -8,7 +8,7 @@ interface SpaceDocumentStepProps {
   onBack: () => void;
 }
 
-const SPACE_OPTIONS = ["SP0001", "SP0002", "SP0003", "SP0004", "SP0005", "SP0006"];
+const SPACE_OPTIONS = ["SP0001", "SP0002", "SP0003"];
 
 const SpaceDocumentStep = ({ onNext, onBack }: SpaceDocumentStepProps) => {
   const [spaceMethod, setSpaceMethod] = useState<"id" | "manual">("id");

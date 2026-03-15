@@ -71,7 +71,7 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
     }
 
     // Site visit scheduling for P&E
-    if ((role === "pne" || role === "spoc") && stage.id === "site-visit") {
+    if ((role === "pne" || role === "spoc") && (stage.id === "site-visit" || stage.id === "slotting")) {
       setSiteVisitReqId(reqId);
       return;
     }
@@ -334,7 +334,7 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
                           onClick={() => handleApprove(req.id)}
                           className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold bg-success/10 text-success hover:bg-success/20 transition-all active:scale-[0.97]"
                         >
-                          <CheckCircle2 className="w-4 h-4" /> {(role === "pne" || role === "spoc") && currentStage.id === "site-visit" ? "Schedule Site Visit" : "Approve"}
+                          <CheckCircle2 className="w-4 h-4" /> {(role === "pne" || role === "spoc") && (currentStage.id === "site-visit" || currentStage.id === "slotting") ? "Schedule Slot" : "Approve"}
                         </button>
                         <button
                           onClick={() => setRejectModalId(req.id)}

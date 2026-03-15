@@ -20,9 +20,9 @@ export interface SpaceMasterEntry {
 
 // Space Master Configuration
 export const SPACE_MASTER: SpaceMasterEntry[] = [
-  { spaceId: "SP0001", powerMeter: "postpaid", waterMeter: "existing", label: "Postpaid Power / Existing Water Meter" },
-  { spaceId: "SP0002", powerMeter: "prepaid", waterMeter: "new", label: "Prepaid Power / New Water Meter" },
-  { spaceId: "SP0003", powerMeter: "temporary", waterMeter: "new", label: "Temporary Power / New Water Meter" },
+  { spaceId: "SP0001", powerMeter: "postpaid", waterMeter: "existing", label: "Postpaid / Existing Water Meter" },
+  { spaceId: "SP0002", powerMeter: "prepaid", waterMeter: "new", label: "Prepaid / New Water Meter" },
+  { spaceId: "SP0003", powerMeter: "temporary", waterMeter: "new", label: "Temporary / New Water Meter" },
 ];
 
 export function getSpaceMeter(spaceId: string): SpaceMasterEntry | undefined {

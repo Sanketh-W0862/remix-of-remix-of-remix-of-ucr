@@ -71,7 +71,7 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
     }
 
     // Site visit scheduling for P&E
-    if ((role === "pne" || role === "spoc") && stage.id === "site-visit") {
+    if ((role === "pne" || role === "spoc") && (stage.id === "site-visit" || stage.id === "slotting")) {
       setSiteVisitReqId(reqId);
       return;
     }

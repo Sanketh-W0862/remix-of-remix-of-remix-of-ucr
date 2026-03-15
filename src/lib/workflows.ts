@@ -40,15 +40,15 @@ export function resolveWorkflowType(
   const spaceCfg = getSpaceMeter(spaceId);
 
   if (utility === "water") {
-    if (spaceCfg && spaceCfg.meterType === "no-meter") return "water-no-meter";
+    if (spaceCfg && spaceCfg.waterMeter === "new") return "water-no-meter";
     return "water-existing-meter";
   }
 
   // Power
-  if (powerType === "temporary") return "power-temporary";
-  if (spaceCfg && spaceCfg.meterType === "temporary") return "power-temporary";
-  if (spaceCfg && (spaceCfg.meterType === "prepaid" || spaceCfg.meterType === "no-meter")) return "power-prepaid";
-  // postpaid or water-meter spaces default to full postpaid power flow
+  if (spaceCfg) {
+    if (spaceCfg.powerMeter === "temporary" || powerType === "temporary") return "power-temporary";
+    if (spaceCfg.powerMeter === "prepaid") return "power-prepaid";
+  }
   return "power-regular";
 }
 

@@ -35,7 +35,7 @@ const LoginStep = ({ onNext }: LoginStepProps) => {
   const [verificationStatus, setVerificationStatus] = useState<"idle" | "verifying" | "verified" | "failed">("idle");
   const [customerForm, setCustomerForm] = useState({
     customerName: "", contactPersonName: "", mobile: "", emailId: "",
-    gstin: "", gstAddress: "", pan: "", tan: "",
+    gstin: "", pan: "", tan: "",
     houseNumber: "", streetName: "", city: "", state: "", pinCode: "",
   });
   const [uploadedDocs, setUploadedDocs] = useState<Record<string, boolean>>({
@@ -261,7 +261,6 @@ const LoginStep = ({ onNext }: LoginStepProps) => {
                           <div><label className="text-xs font-medium text-foreground mb-1 block">Mobile *</label><input type="tel" value={customerForm.mobile} onChange={(e) => handleFieldChange("mobile", e.target.value)} className="input-glass w-full text-sm" /></div>
                           <div><label className="text-xs font-medium text-foreground mb-1 block">Email *</label><input type="email" value={customerForm.emailId} onChange={(e) => handleFieldChange("emailId", e.target.value)} className="input-glass w-full text-sm" /></div>
                           <div><label className="text-xs font-medium text-foreground mb-1 block">GSTIN</label><input type="text" value={customerForm.gstin} onChange={(e) => handleFieldChange("gstin", e.target.value)} className="input-glass w-full text-sm" /></div>
-                          <div><label className="text-xs font-medium text-foreground mb-1 block">GST Address</label><input type="text" value={customerForm.gstAddress} onChange={(e) => handleFieldChange("gstAddress", e.target.value)} className="input-glass w-full text-sm" /></div>
                           <div><label className="text-xs font-medium text-foreground mb-1 block">PAN</label><input type="text" value={customerForm.pan} onChange={(e) => handleFieldChange("pan", e.target.value)} className="input-glass w-full text-sm" /></div>
                           <div><label className="text-xs font-medium text-foreground mb-1 block">TAN</label><input type="text" value={customerForm.tan} onChange={(e) => handleFieldChange("tan", e.target.value)} className="input-glass w-full text-sm" /></div>
                         </div>

@@ -179,7 +179,7 @@ export const WORKFLOWS: Record<WorkflowType, WorkflowStage[]> = {
         {
           label: "Upload Meter Purchase Proof",
           type: "upload",
-          fields: [{ name: "meter_proof", label: "Meter Purchase Receipt", type: "file" }],
+          fields: [{ name: "meter_proof", label: "Meter Purchase Proof", type: "file" }],
         },
       ],
     },

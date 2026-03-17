@@ -34,6 +34,8 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
   const [sdModalReqId, setSdModalReqId] = useState<string | null>(null);
   const [sdChoice, setSdChoice] = useState<SdDecision | null>(null);
   const [sdWaiverFile, setSdWaiverFile] = useState<string>("");
+  const [actionModalReqId, setActionModalReqId] = useState<string | null>(null);
+  const [actionModalAction, setActionModalAction] = useState<WorkflowAction | null>(null);
 
   // All requests where current stage belongs to this role and not completed
   const myPendingRequests = requests.filter((r) => {

@@ -16,7 +16,7 @@ interface ConnectionDashboardProps {
 type DashFilter = "active" | "pending" | "completed";
 
 const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProps) => {
-  const { requests, advanceStage, clearRejection } = useRequestStore();
+  const { requests, advanceStage, markActionCompleted, clearRejection } = useRequestStore();
   const [modalOpen, setModalOpen] = useState(false);
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
   const [activeAction, setActiveAction] = useState<WorkflowAction | null>(null);
@@ -29,8 +29,24 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
   };
 
   const handleActionSubmit = () => {
-    if (!activeRequestId) return;
-    advanceStage(activeRequestId);
+    if (!activeRequestId || !activeAction) return;
+    const req = requests.find((r) => r.id === activeRequestId);
+    if (!req) return;
+
+    const currentStage = getCurrentStage(req.workflowType, req.stageIndex);
+    const totalActions = currentStage.actions?.length ?? 0;
+    const alreadyCompleted = req.completedActions ?? [];
+    const updated = [...new Set([...alreadyCompleted, activeAction.label])];
+
+    if (totalActions > 1 && updated.length < totalActions) {
+      // Not all actions done yet — just record this one
+      markActionCompleted(activeRequestId, updated);
+    } else {
+      // All actions done (or single action) — advance
+      markActionCompleted(activeRequestId, []);
+      advanceStage(activeRequestId);
+    }
+
     setModalOpen(false);
     setActiveRequestId(null);
     setActiveAction(null);
@@ -237,20 +253,26 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
                   {/* Action Buttons */}
                   {actionRequired && currentStage.actions && currentStage.actions.length > 0 && (
                     <div className="mt-4 pt-3 border-t border-border/50 flex flex-wrap gap-2">
-                      {currentStage.actions.map((action) => (
-                        <button
-                          key={action.label}
-                          onClick={() => handleActionClick(req.id, action)}
-                          className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all active:scale-[0.97] ${
-                            action.type === "confirm" && action.label.includes("Deactivation")
-                              ? "bg-destructive/10 text-destructive hover:bg-destructive/20"
-                              : "bg-accent/10 text-accent hover:bg-accent/20"
-                          }`}
-                        >
-                          <AlertTriangle className="w-3.5 h-3.5" />
-                          {action.label}
-                        </button>
-                      ))}
+                      {currentStage.actions.map((action) => {
+                        const done = req.completedActions?.includes(action.label);
+                        return (
+                          <button
+                            key={action.label}
+                            onClick={() => !done && handleActionClick(req.id, action)}
+                            disabled={done}
+                            className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all active:scale-[0.97] ${
+                              done
+                                ? "bg-muted text-muted-foreground cursor-not-allowed line-through"
+                                : action.type === "confirm" && action.label.includes("Deactivation")
+                                  ? "bg-destructive/10 text-destructive hover:bg-destructive/20"
+                                  : "bg-accent/10 text-accent hover:bg-accent/20"
+                            }`}
+                          >
+                            {done ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertTriangle className="w-3.5 h-3.5" />}
+                            {action.label}
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
                 </motion.div>

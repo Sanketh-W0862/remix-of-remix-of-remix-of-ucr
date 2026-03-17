@@ -24,7 +24,7 @@ export const STAGE_ROLE_MAP: Record<string, UserRole> = {
   "sd-payment": "user",
   "finance-confirms": "finance",
   "finance-verification": "finance",
-  "meter-recommendation": "pne",
+  "customer-meter-upload": "user",
 
   // Power Temporary
   "sd-calculation": "spoc",

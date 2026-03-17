@@ -34,6 +34,7 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
   const [sdModalReqId, setSdModalReqId] = useState<string | null>(null);
   const [sdChoice, setSdChoice] = useState<SdDecision | null>(null);
   const [sdWaiverFile, setSdWaiverFile] = useState<string>("");
+  const [sdAmountValue, setSdAmountValue] = useState<string>("");
   const [actionModalReqId, setActionModalReqId] = useState<string | null>(null);
   const [actionModalAction, setActionModalAction] = useState<WorkflowAction | null>(null);
 
@@ -91,10 +92,11 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
 
   const handleSdSubmit = () => {
     if (sdModalReqId && sdChoice) {
-      setSdDecision(sdModalReqId, sdChoice, sdChoice === "waived" ? sdWaiverFile : undefined);
+      setSdDecision(sdModalReqId, sdChoice, sdChoice === "waived" ? sdWaiverFile : undefined, sdChoice === "pending" ? sdAmountValue : undefined);
       setSdModalReqId(null);
       setSdChoice(null);
       setSdWaiverFile("");
+      setSdAmountValue("");
     }
   };
 
@@ -312,6 +314,9 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
                                   {req.sdDecision === "waived" ? "Waived" :
                                    req.sdDecision === "collected" ? "Already Collected" : "Pending Collection"}
                                 </span>
+                                {req.sdDecision === "pending" && req.sdAmount && (
+                                  <span className="ml-2 text-foreground font-semibold">₹{req.sdAmount}</span>
+                                )}
                               </div>
                             )}
                             {req.expiry && (
@@ -473,6 +478,20 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
                 ))}
               </div>
 
+              {sdChoice === "pending" && (
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-foreground mb-1.5">Security Deposit Amount (₹)</label>
+                  <input
+                    type="number"
+                    className="input-glass w-full"
+                    placeholder="Enter amount in rupees..."
+                    value={sdAmountValue}
+                    onChange={(e) => setSdAmountValue(e.target.value)}
+                    min="0"
+                  />
+                </div>
+              )}
+
               {sdChoice === "waived" && (
                 <div className="mt-4">
                   <label className="block text-sm font-medium text-foreground mb-1.5">Email Proof of Waiver</label>
@@ -500,12 +519,12 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
               )}
 
               <div className="flex gap-3 mt-6">
-                <button onClick={() => { setSdModalReqId(null); setSdChoice(null); setSdWaiverFile(""); }} className="btn-secondary flex-1">
+                <button onClick={() => { setSdModalReqId(null); setSdChoice(null); setSdWaiverFile(""); setSdAmountValue(""); }} className="btn-secondary flex-1">
                   Cancel
                 </button>
                 <button
                   onClick={handleSdSubmit}
-                  disabled={!sdChoice || (sdChoice === "waived" && !sdWaiverFile)}
+                  disabled={!sdChoice || (sdChoice === "waived" && !sdWaiverFile) || (sdChoice === "pending" && !sdAmountValue)}
                   className="flex-1 gradient-bg text-primary-foreground px-6 py-3 rounded-xl font-semibold transition-all hover:opacity-90 disabled:opacity-50"
                 >
                   Confirm

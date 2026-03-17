@@ -27,6 +27,7 @@ export interface ConnectionRequest {
   userDetails?: RequestUserDetails;
   sdDecision?: SdDecision;
   sdWaiverProof?: string;
+  sdAmount?: string;
 }
 
 export const INITIAL_REQUESTS: ConnectionRequest[] = [
@@ -117,7 +118,7 @@ export function useRequestStore() {
     notify();
   }, []);
 
-  const setSdDecision = useCallback((requestId: string, decision: SdDecision, waiverProof?: string) => {
+  const setSdDecision = useCallback((requestId: string, decision: SdDecision, waiverProof?: string, sdAmount?: string) => {
     globalRequests = globalRequests.map((r) => {
       if (r.id !== requestId) return r;
 
@@ -128,6 +129,7 @@ export function useRequestStore() {
         ...r,
         sdDecision: decision,
         sdWaiverProof: decision === "waived" ? waiverProof : undefined,
+        sdAmount: decision === "pending" ? sdAmount : undefined,
         rejectionReason: undefined,
       };
 
@@ -137,10 +139,10 @@ export function useRequestStore() {
         return updated;
       }
 
-      // collected / waived: skip SD payment + finance and route directly to P&E
-      const meterRecommendationIndex = findStageIndex("meter-recommendation");
-      updated.stageIndex = meterRecommendationIndex >= 0
-        ? meterRecommendationIndex
+      // collected / waived: skip SD payment + finance and route directly to customer meter upload
+      const customerMeterIndex = findStageIndex("customer-meter-upload");
+      updated.stageIndex = customerMeterIndex >= 0
+        ? customerMeterIndex
         : Math.min(r.stageIndex + 1, stages.length - 1);
 
       return updated;

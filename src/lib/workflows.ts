@@ -129,8 +129,8 @@ export const WORKFLOWS: Record<WorkflowType, WorkflowStage[]> = {
     },
     { id: "finance-confirms", label: "Finance Confirms", userActionRequired: false },
     {
-      id: "meter-recommendation",
-      label: "Meter Recommendation",
+      id: "customer-meter-upload",
+      label: "Meter Purchase & Calibration",
       userActionRequired: true,
       actions: METER_ACTIONS,
     },

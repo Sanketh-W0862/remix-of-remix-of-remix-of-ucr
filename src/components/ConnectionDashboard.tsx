@@ -21,6 +21,7 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
   const [activeAction, setActiveAction] = useState<WorkflowAction | null>(null);
   const [dashFilter, setDashFilter] = useState<DashFilter>("active");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const handleActionClick = (reqId: string, action: WorkflowAction) => {
     setActiveRequestId(reqId);

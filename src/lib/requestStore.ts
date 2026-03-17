@@ -28,6 +28,7 @@ export interface ConnectionRequest {
   sdDecision?: SdDecision;
   sdWaiverProof?: string;
   sdAmount?: string;
+  completedActions?: string[]; // tracks submitted action labels within a stage
 }
 
 export const INITIAL_REQUESTS: ConnectionRequest[] = [

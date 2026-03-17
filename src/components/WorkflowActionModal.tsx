@@ -78,7 +78,7 @@ const WorkflowActionModal = ({ open, onClose, onSubmit, requestId, action }: Wor
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative z-10 w-full max-w-md glass-card-elevated p-6"
+            className="relative z-10 w-full max-w-md max-h-[85vh] glass-card-elevated p-6 flex flex-col overflow-hidden"
           >
             <button onClick={onClose} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors">
               <X className="w-5 h-5" />

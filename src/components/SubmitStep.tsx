@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, CheckCircle2, Send, Zap, FileText, MapPin, Calculator } from "lucide-react";
-import { addRequest, type RequestUserDetails } from "@/lib/requestStore";
+import { addRequest, type RequestUserDetails, type LoadData, type LoadAppliance } from "@/lib/requestStore";
 import { resolveWorkflowType } from "@/lib/workflows";
 import type { WorkflowType } from "@/lib/workflows";
 
@@ -45,6 +45,39 @@ const SubmitStep = ({ wizardData, onBack, onSubmit }: SubmitStepProps) => {
       email: loginData.email || loginData.customerForm?.emailId || undefined,
     };
 
+    // Build load data from wizard
+    let loadData: LoadData | undefined;
+    if (wizardData.load) {
+      const ld = wizardData.load;
+      const appliances: LoadAppliance[] = [];
+
+      // Default appliances with qty > 0
+      if (ld.quantities && ld.kwValues) {
+        for (const [name, qty] of Object.entries(ld.quantities)) {
+          if ((qty as number) > 0) {
+            appliances.push({ name, kw: (ld.kwValues as Record<string, number>)[name] || 0, qty: qty as number });
+          }
+        }
+      }
+
+      // Custom appliances
+      if (ld.customAppliances) {
+        for (const ca of ld.customAppliances) {
+          if (ca.qty > 0) {
+            appliances.push({ name: ca.name, kw: ca.kw, qty: ca.qty });
+          }
+        }
+      }
+
+      loadData = {
+        method: ld.method || "calculator",
+        totalKW: ld.totalKW || 0,
+        totalKVA: ld.totalKVA || 0,
+        appliances: appliances.length > 0 ? appliances : undefined,
+        docUploaded: ld.docUploaded || false,
+      };
+    }
+
     for (const rw of resolvedWorkflows) {
       const typeLabel =
         rw.wfType === "power-prepaid" ? "Prepaid" :
@@ -60,6 +93,7 @@ const SubmitStep = ({ wizardData, onBack, onSubmit }: SubmitStepProps) => {
         space: spaceId,
         expiry: rw.wfType === "power-temporary" ? wizardData.utility?.tempDates?.to : undefined,
         userDetails,
+        loadData: rw.utility === "Power" ? loadData : undefined,
       });
     }
 

@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap, Droplets, Clock, CheckCircle2, AlertCircle, Plus, BarChart3,
-  AlertTriangle, LogOut, RefreshCw, Calendar,
+  AlertTriangle, LogOut, RefreshCw, Calendar, ChevronDown, ChevronUp, FileText,
 } from "lucide-react";
 import WorkflowActionModal, { type WorkflowAction } from "./WorkflowActionModal";
-import { type WorkflowType, getWorkflowStages, getCurrentStage, getTimelineLabels } from "@/lib/workflows";
+import { type WorkflowType, getWorkflowStages, getCurrentStage, getTimelineLabels, getWorkflowLabel } from "@/lib/workflows";
 import { useRequestStore } from "@/lib/requestStore";
 
 interface ConnectionDashboardProps {
@@ -21,6 +21,7 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
   const [activeAction, setActiveAction] = useState<WorkflowAction | null>(null);
   const [dashFilter, setDashFilter] = useState<DashFilter>("active");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const handleActionClick = (reqId: string, action: WorkflowAction) => {
     setActiveRequestId(reqId);
@@ -228,6 +229,197 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
                     <span className="text-[10px] text-muted-foreground">{timelineLabels[0]}</span>
                     <span className="text-[10px] text-muted-foreground">{timelineLabels[timelineLabels.length - 1]}</span>
                   </div>
+
+                  {/* View Details Toggle */}
+                  <button
+                    onClick={() => setExpandedId(expandedId === req.id ? null : req.id)}
+                    className="text-xs text-primary flex items-center gap-1 mt-3 mb-1"
+                  >
+                    {expandedId === req.id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                    {expandedId === req.id ? "Hide Details" : "View Details"}
+                  </button>
+
+                  <AnimatePresence>
+                    {expandedId === req.id && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="mb-3 p-3 rounded-lg bg-muted/30 border border-border/50"
+                      >
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                          {/* ── Request Information ── */}
+                          <div className="col-span-2 mb-1">
+                            <span className="text-xs font-semibold text-primary uppercase tracking-wider">Request Information</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Request ID:</span>
+                            <span className="ml-2 text-foreground font-medium">{req.id}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Submitted:</span>
+                            <span className="ml-2 text-foreground">{req.date}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Utility:</span>
+                            <span className="ml-2 text-foreground">{req.utility}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Connection Type:</span>
+                            <span className="ml-2 text-foreground">{req.type}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Workflow:</span>
+                            <span className="ml-2 text-foreground">{getWorkflowLabel(req.workflowType)}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Space ID:</span>
+                            <span className="ml-2 text-foreground">{req.space}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Current Stage:</span>
+                            <span className="ml-2 text-foreground font-medium">{currentStage.label}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Progress:</span>
+                            <span className="ml-2 text-foreground">{Math.min(req.stageIndex + 1, stages.length)} / {stages.length} steps</span>
+                          </div>
+                          {req.expiry && (
+                            <div>
+                              <span className="text-muted-foreground">Expiry:</span>
+                              <span className="ml-2 text-warning font-medium">{req.expiry}</span>
+                            </div>
+                          )}
+
+                          {/* ── Customer Details ── */}
+                          {req.userDetails && (
+                            <>
+                              <div className="col-span-2 border-t border-border/50 my-1" />
+                              <div className="col-span-2 mb-1">
+                                <span className="text-xs font-semibold text-primary uppercase tracking-wider">Customer Details</span>
+                              </div>
+                              {req.userDetails.customerName && (
+                                <div>
+                                  <span className="text-muted-foreground">Name:</span>
+                                  <span className="ml-2 text-foreground">{req.userDetails.customerName}</span>
+                                </div>
+                              )}
+                              {req.userDetails.customerCode && (
+                                <div>
+                                  <span className="text-muted-foreground">Code:</span>
+                                  <span className="ml-2 text-foreground">{req.userDetails.customerCode}</span>
+                                </div>
+                              )}
+                              {req.userDetails.contactPerson && (
+                                <div>
+                                  <span className="text-muted-foreground">Contact:</span>
+                                  <span className="ml-2 text-foreground">{req.userDetails.contactPerson}</span>
+                                </div>
+                              )}
+                              {req.userDetails.mobile && (
+                                <div>
+                                  <span className="text-muted-foreground">Mobile:</span>
+                                  <span className="ml-2 text-foreground">{req.userDetails.mobile}</span>
+                                </div>
+                              )}
+                              {req.userDetails.email && (
+                                <div>
+                                  <span className="text-muted-foreground">Email:</span>
+                                  <span className="ml-2 text-foreground">{req.userDetails.email}</span>
+                                </div>
+                              )}
+                            </>
+                          )}
+
+                          {/* ── Load & Appliances ── */}
+                          {req.loadData && (
+                            <>
+                              <div className="col-span-2 border-t border-border/50 my-1" />
+                              <div className="col-span-2 mb-1">
+                                <span className="text-xs font-semibold text-primary uppercase tracking-wider">Load Information</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Method:</span>
+                                <span className="ml-2 text-foreground capitalize">{req.loadData.method === "calculator" ? "AI Calculator" : "Document Upload"}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Total Load:</span>
+                                <span className="ml-2 text-foreground font-semibold">{req.loadData.totalKW.toFixed(2)} kW</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Max Demand:</span>
+                                <span className="ml-2 text-foreground font-semibold">{req.loadData.totalKVA.toFixed(2)} kVA</span>
+                              </div>
+                              {req.loadData.docUploaded && (
+                                <div>
+                                  <span className="text-muted-foreground">Load Document:</span>
+                                  <span className="ml-2 text-success font-medium">Uploaded</span>
+                                </div>
+                              )}
+                              {req.loadData.appliances && req.loadData.appliances.length > 0 && (
+                                <div className="col-span-2 mt-1">
+                                  <span className="text-muted-foreground text-xs">Appliance Breakdown:</span>
+                                  <div className="mt-1.5 rounded-lg border border-border/50 overflow-hidden">
+                                    <table className="w-full text-xs">
+                                      <thead>
+                                        <tr className="bg-muted/50">
+                                          <th className="text-left px-3 py-1.5 font-medium text-muted-foreground">Appliance</th>
+                                          <th className="text-center px-3 py-1.5 font-medium text-muted-foreground">Qty</th>
+                                          <th className="text-right px-3 py-1.5 font-medium text-muted-foreground">kW/unit</th>
+                                          <th className="text-right px-3 py-1.5 font-medium text-muted-foreground">Total kW</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {req.loadData.appliances.map((a) => (
+                                          <tr key={a.name} className="border-t border-border/30">
+                                            <td className="px-3 py-1.5 text-foreground">{a.name}</td>
+                                            <td className="px-3 py-1.5 text-center text-foreground">{a.qty}</td>
+                                            <td className="px-3 py-1.5 text-right text-muted-foreground">{a.kw.toFixed(3)}</td>
+                                            <td className="px-3 py-1.5 text-right text-foreground font-medium">{(a.kw * a.qty).toFixed(2)}</td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </div>
+                              )}
+                            </>
+                          )}
+
+                          {/* ── Workflow Status ── */}
+                          {(req.sdDecision || req.siteVisitDate) && (
+                            <>
+                              <div className="col-span-2 border-t border-border/50 my-1" />
+                              <div className="col-span-2 mb-1">
+                                <span className="text-xs font-semibold text-primary uppercase tracking-wider">Workflow Status</span>
+                              </div>
+                              {req.sdDecision && (
+                                <div className="col-span-2">
+                                  <span className="text-muted-foreground">SD Status:</span>
+                                  <span className={`ml-2 font-medium ${
+                                    req.sdDecision === "waived" ? "text-warning" :
+                                    req.sdDecision === "collected" ? "text-success" : "text-accent"
+                                  }`}>
+                                    {req.sdDecision === "waived" ? "Waived" :
+                                     req.sdDecision === "collected" ? "Already Collected" : "Pending Collection"}
+                                  </span>
+                                  {req.sdDecision === "pending" && req.sdAmount && (
+                                    <span className="ml-2 text-foreground font-semibold">₹{req.sdAmount}</span>
+                                  )}
+                                </div>
+                              )}
+                              {req.siteVisitDate && (
+                                <div className="col-span-2">
+                                  <span className="text-muted-foreground">Site Visit:</span>
+                                  <span className="ml-2 text-info font-medium">{req.siteVisitDate}</span>
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
                   {/* Rejection Notice */}
                   {hasRejection && (

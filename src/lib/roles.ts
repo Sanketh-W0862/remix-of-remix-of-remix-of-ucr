@@ -35,6 +35,7 @@ export const STAGE_ROLE_MAP: Record<string, UserRole> = {
   // Shared
   "slotting": "pne",
   "site-visit": "pne",
+  "site-visit-form": "pne",
   "pne-final-approval": "pne",
   "activated": "pne",
 

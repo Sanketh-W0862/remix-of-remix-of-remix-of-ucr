@@ -89,7 +89,7 @@ const SITE_VISIT_FORM_ACTION: WorkflowAction = {
     { name: "details_of_load", label: "Details of Load", type: "text" },
     { name: "meter_type", label: "Meter Type", type: "select", options: ["3-PHASE", "1-PHASE"] },
     { name: "meter_make", label: "Meter Make", type: "select", options: ["Saral", "Secure", "Schneider Electric", "L&T", "Other"] },
-    { name: "meter_make_other", label: "Meter Make (Other)", type: "text" },
+    { name: "meter_make_other", label: "Meter Make (Other)", type: "text", showWhen: { field: "meter_make", value: "Other" } },
     { name: "meter_serial_no", label: "Meter Serial No.", type: "text" },
     { name: "meter_calibration_date", label: "Meter Calibration Date", type: "date" },
     { name: "meter_opening_reading", label: "Meter Opening Reading", type: "number" },

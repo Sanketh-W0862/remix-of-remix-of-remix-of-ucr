@@ -8,6 +8,7 @@ export interface WorkflowActionField {
   type: "file" | "text" | "textarea" | "date" | "number" | "select";
   options?: string[];
   autoValue?: string;
+  showWhen?: { field: string; value: string };
 }
 
 export interface WorkflowAction {

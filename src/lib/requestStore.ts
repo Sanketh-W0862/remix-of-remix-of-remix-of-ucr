@@ -37,6 +37,7 @@ export const INITIAL_REQUESTS: ConnectionRequest[] = [
   { id: "REQ-2024-005", utility: "Power", type: "Temporary", workflowType: "power-temporary", space: "SP0005", stageIndex: 7, date: "2024-01-05", expiry: "2024-04-05" },
   { id: "REQ-2024-006", utility: "Water", type: "New Meter", workflowType: "water-no-meter", space: "SP0005", stageIndex: 2, date: "2024-03-15" },
   { id: "REQ-2024-007", utility: "Power", type: "Prepaid", workflowType: "power-prepaid", space: "SP0002", stageIndex: 1, date: "2024-03-18" },
+  { id: "REQ-2024-008", utility: "Power", type: "Prepaid", workflowType: "power-prepaid", space: "SP0002", stageIndex: 3, date: "2024-03-12" },
 ];
 
 // Simple shared-state store

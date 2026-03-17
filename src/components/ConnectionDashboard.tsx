@@ -253,20 +253,26 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
                   {/* Action Buttons */}
                   {actionRequired && currentStage.actions && currentStage.actions.length > 0 && (
                     <div className="mt-4 pt-3 border-t border-border/50 flex flex-wrap gap-2">
-                      {currentStage.actions.map((action) => (
-                        <button
-                          key={action.label}
-                          onClick={() => handleActionClick(req.id, action)}
-                          className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all active:scale-[0.97] ${
-                            action.type === "confirm" && action.label.includes("Deactivation")
-                              ? "bg-destructive/10 text-destructive hover:bg-destructive/20"
-                              : "bg-accent/10 text-accent hover:bg-accent/20"
-                          }`}
-                        >
-                          <AlertTriangle className="w-3.5 h-3.5" />
-                          {action.label}
-                        </button>
-                      ))}
+                      {currentStage.actions.map((action) => {
+                        const done = req.completedActions?.includes(action.label);
+                        return (
+                          <button
+                            key={action.label}
+                            onClick={() => !done && handleActionClick(req.id, action)}
+                            disabled={done}
+                            className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all active:scale-[0.97] ${
+                              done
+                                ? "bg-muted text-muted-foreground cursor-not-allowed line-through"
+                                : action.type === "confirm" && action.label.includes("Deactivation")
+                                  ? "bg-destructive/10 text-destructive hover:bg-destructive/20"
+                                  : "bg-accent/10 text-accent hover:bg-accent/20"
+                            }`}
+                          >
+                            {done ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertTriangle className="w-3.5 h-3.5" />}
+                            {action.label}
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
                 </motion.div>

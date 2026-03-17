@@ -34,6 +34,7 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
   const [sdModalReqId, setSdModalReqId] = useState<string | null>(null);
   const [sdChoice, setSdChoice] = useState<SdDecision | null>(null);
   const [sdWaiverFile, setSdWaiverFile] = useState<string>("");
+  const [sdAmountValue, setSdAmountValue] = useState<string>("");
   const [actionModalReqId, setActionModalReqId] = useState<string | null>(null);
   const [actionModalAction, setActionModalAction] = useState<WorkflowAction | null>(null);
 

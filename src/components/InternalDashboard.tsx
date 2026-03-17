@@ -79,6 +79,13 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
       return;
     }
 
+    // Site visit form for P&E
+    if (stage.id === "site-visit-form" && stage.actions && stage.actions.length > 0) {
+      setActionModalReqId(reqId);
+      setActionModalAction(stage.actions[0]);
+      return;
+    }
+
     advanceStage(reqId);
   };
 

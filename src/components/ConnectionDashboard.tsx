@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap, Droplets, Clock, CheckCircle2, AlertCircle, Plus, BarChart3,
-  AlertTriangle, LogOut, RefreshCw, Calendar,
+  AlertTriangle, LogOut, RefreshCw, Calendar, ChevronDown, ChevronUp, FileText,
 } from "lucide-react";
 import WorkflowActionModal, { type WorkflowAction } from "./WorkflowActionModal";
-import { type WorkflowType, getWorkflowStages, getCurrentStage, getTimelineLabels } from "@/lib/workflows";
+import { type WorkflowType, getWorkflowStages, getCurrentStage, getTimelineLabels, getWorkflowLabel } from "@/lib/workflows";
 import { useRequestStore } from "@/lib/requestStore";
 
 interface ConnectionDashboardProps {

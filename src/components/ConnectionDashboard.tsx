@@ -29,8 +29,24 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
   };
 
   const handleActionSubmit = () => {
-    if (!activeRequestId) return;
-    advanceStage(activeRequestId);
+    if (!activeRequestId || !activeAction) return;
+    const req = requests.find((r) => r.id === activeRequestId);
+    if (!req) return;
+
+    const currentStage = getCurrentStage(req.workflowType, req.stageIndex);
+    const totalActions = currentStage.actions?.length ?? 0;
+    const alreadyCompleted = req.completedActions ?? [];
+    const updated = [...new Set([...alreadyCompleted, activeAction.label])];
+
+    if (totalActions > 1 && updated.length < totalActions) {
+      // Not all actions done yet — just record this one
+      markActionCompleted(activeRequestId, updated);
+    } else {
+      // All actions done (or single action) — advance
+      markActionCompleted(activeRequestId, []);
+      advanceStage(activeRequestId);
+    }
+
     setModalOpen(false);
     setActiveRequestId(null);
     setActiveAction(null);

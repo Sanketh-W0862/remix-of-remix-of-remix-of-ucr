@@ -106,9 +106,10 @@ const WorkflowActionModal = ({ open, onClose, onSubmit, requestId, action }: Wor
                 </div>
 
                 <div className="space-y-4 overflow-y-auto flex-1 min-h-0 pr-1">
-                  {fields.map((field) => (
+                  {fields.map((field) => {
+                    if (field.showWhen && textValues[field.showWhen.field] !== field.showWhen.value) return null;
+                    return (
                     <div key={field.name}>
-                      <label className="block text-sm font-medium text-foreground mb-1.5">{field.label}</label>
                       {field.type === "file" ? (
                         <label className="flex flex-col items-center justify-center gap-2 p-5 rounded-xl border-2 border-dashed border-border hover:border-primary/40 cursor-pointer transition-colors bg-muted/30">
                           {files[field.name] ? (

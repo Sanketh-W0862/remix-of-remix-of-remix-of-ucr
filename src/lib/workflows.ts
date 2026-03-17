@@ -167,7 +167,7 @@ export const WORKFLOWS: Record<WorkflowType, WorkflowStage[]> = {
     { id: "activated", label: "Water Activated", userActionRequired: false },
   ],
 
-  // ── Water: No Meter Path ──
+  // ── Water: New Meter Path ──
   "water-no-meter": [
     { id: "submitted", label: "Submitted", userActionRequired: false },
     { id: "spoc-approval", label: "SPOC Approval", userActionRequired: false },

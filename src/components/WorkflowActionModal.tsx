@@ -45,10 +45,24 @@ const WorkflowActionModal = ({ open, onClose, onSubmit, requestId, action }: Wor
     }, 1500);
   };
 
-  const fields = action.fields ?? [
+  const fields: WorkflowActionField[] = action.fields ?? [
     ...(action.type === "upload" ? [{ name: "document", label: action.label, type: "file" as const }] : []),
     ...(action.type === "confirm" ? [{ name: "confirmation", label: "Confirmation Notes", type: "textarea" as const }] : []),
   ];
+
+  // Auto-populate fields with autoValue
+  React.useEffect(() => {
+    const autoFields = fields.filter((f) => f.autoValue);
+    if (autoFields.length > 0) {
+      setTextValues((prev) => {
+        const updated = { ...prev };
+        autoFields.forEach((f) => {
+          if (!updated[f.name]) updated[f.name] = f.autoValue!;
+        });
+        return updated;
+      });
+    }
+  }, []);
 
   return (
     <AnimatePresence>

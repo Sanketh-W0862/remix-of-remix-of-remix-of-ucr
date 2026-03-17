@@ -171,7 +171,6 @@ export const WORKFLOWS: Record<WorkflowType, WorkflowStage[]> = {
   "water-no-meter": [
     { id: "submitted", label: "Submitted", userActionRequired: false },
     { id: "spoc-approval", label: "SPOC Approval", userActionRequired: false },
-    { id: "meter-recommendation", label: "Meter Recommendation", userActionRequired: false },
     {
       id: "meter-purchase",
       label: "Meter Purchase Proof",
@@ -184,8 +183,7 @@ export const WORKFLOWS: Record<WorkflowType, WorkflowStage[]> = {
         },
       ],
     },
-    { id: "slotting", label: "Slotting", userActionRequired: false },
-    { id: "site-visit", label: "Site Visit & Issue Resolution", userActionRequired: false },
+    { id: "slotting", label: "Schedule Site Visit (P&E)", userActionRequired: false },
     { id: "activated", label: "Water Activated", userActionRequired: false },
   ],
 

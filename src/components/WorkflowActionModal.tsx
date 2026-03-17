@@ -1,11 +1,19 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Upload, CheckCircle2, FileText, AlertTriangle } from "lucide-react";
-import { useState } from "react";
+import React, { useState } from "react";
+
+export interface WorkflowActionField {
+  name: string;
+  label: string;
+  type: "file" | "text" | "textarea" | "date" | "number" | "select";
+  options?: string[];
+  autoValue?: string;
+}
 
 export interface WorkflowAction {
   label: string;
   type: "upload" | "confirm" | "choice";
-  fields?: { name: string; label: string; type: "file" | "text" | "textarea" | "date" }[];
+  fields?: WorkflowActionField[];
 }
 
 interface WorkflowActionModalProps {
@@ -37,10 +45,24 @@ const WorkflowActionModal = ({ open, onClose, onSubmit, requestId, action }: Wor
     }, 1500);
   };
 
-  const fields = action.fields ?? [
+  const fields: WorkflowActionField[] = action.fields ?? [
     ...(action.type === "upload" ? [{ name: "document", label: action.label, type: "file" as const }] : []),
     ...(action.type === "confirm" ? [{ name: "confirmation", label: "Confirmation Notes", type: "textarea" as const }] : []),
   ];
+
+  // Auto-populate fields with autoValue
+  React.useEffect(() => {
+    const autoFields = fields.filter((f) => f.autoValue);
+    if (autoFields.length > 0) {
+      setTextValues((prev) => {
+        const updated = { ...prev };
+        autoFields.forEach((f) => {
+          if (!updated[f.name]) updated[f.name] = f.autoValue!;
+        });
+        return updated;
+      });
+    }
+  }, []);
 
   return (
     <AnimatePresence>
@@ -115,12 +137,32 @@ const WorkflowActionModal = ({ open, onClose, onSubmit, requestId, action }: Wor
                           value={textValues[field.name] || ""}
                           onChange={(e) => setTextValues((prev) => ({ ...prev, [field.name]: e.target.value }))}
                         />
+                      ) : field.type === "number" ? (
+                        <input
+                          type="number"
+                          className="input-glass w-full"
+                          placeholder={`Enter ${field.label.toLowerCase()}...`}
+                          value={textValues[field.name] || ""}
+                          onChange={(e) => setTextValues((prev) => ({ ...prev, [field.name]: e.target.value }))}
+                        />
+                      ) : field.type === "select" && field.options ? (
+                        <select
+                          className="input-glass w-full"
+                          value={textValues[field.name] || ""}
+                          onChange={(e) => setTextValues((prev) => ({ ...prev, [field.name]: e.target.value }))}
+                        >
+                          <option value="">Select {field.label.toLowerCase()}...</option>
+                          {field.options.map((opt) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
                       ) : (
                         <input
                           type="text"
                           className="input-glass w-full"
                           placeholder={`Enter ${field.label.toLowerCase()}...`}
                           value={textValues[field.name] || ""}
+                          readOnly={!!field.autoValue}
                           onChange={(e) => setTextValues((prev) => ({ ...prev, [field.name]: e.target.value }))}
                         />
                       )}

@@ -81,6 +81,22 @@ const METER_ACTIONS: WorkflowAction[] = [
   },
 ];
 
+const SITE_VISIT_FORM_ACTION: WorkflowAction = {
+  label: "Site Visit Form",
+  type: "confirm",
+  fields: [
+    { name: "category_tariff", label: "Category & Tariff", type: "select", options: ["33kV", "11kV", "415V", "230V"] },
+    { name: "details_of_load", label: "Details of Load", type: "text" },
+    { name: "meter_type", label: "Meter Type", type: "select", options: ["3-PHASE", "1-PHASE"] },
+    { name: "meter_make", label: "Meter Make", type: "text" },
+    { name: "meter_serial_no", label: "Meter Serial No.", type: "text" },
+    { name: "meter_calibration_date", label: "Meter Calibration Date", type: "date" },
+    { name: "meter_opening_reading", label: "Meter Opening Reading", type: "number" },
+    { name: "authorized_signatory", label: "Authorized Signatory (P&E)", type: "text", autoValue: "P&E Officer" },
+    { name: "meter_photo", label: "Meter Photo", type: "file" },
+  ],
+};
+
 const EXPIRY_ACTIONS: WorkflowAction[] = [
   {
     label: "Request Extension",

@@ -170,7 +170,7 @@ const WorkflowActionModal = ({ open, onClose, onSubmit, requestId, action }: Wor
                   ))}
                 </div>
 
-                <div className="flex gap-3 mt-6">
+                <div className="flex gap-3 mt-6 shrink-0">
                   <button onClick={onClose} className="btn-secondary flex-1">Cancel</button>
                   <button onClick={handleSubmit} className="btn-primary flex-1">Submit</button>
                 </div>

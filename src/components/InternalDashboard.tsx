@@ -13,6 +13,7 @@ import { getWorkflowStages, getCurrentStage, getTimelineLabels, getWorkflowLabel
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import WorkflowActionModal, { type WorkflowAction } from "./WorkflowActionModal";
 
 interface InternalDashboardProps {
   role: UserRole;
@@ -33,6 +34,8 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
   const [sdModalReqId, setSdModalReqId] = useState<string | null>(null);
   const [sdChoice, setSdChoice] = useState<SdDecision | null>(null);
   const [sdWaiverFile, setSdWaiverFile] = useState<string>("");
+  const [actionModalReqId, setActionModalReqId] = useState<string | null>(null);
+  const [actionModalAction, setActionModalAction] = useState<WorkflowAction | null>(null);
 
   // All requests where current stage belongs to this role and not completed
   const myPendingRequests = requests.filter((r) => {
@@ -73,6 +76,13 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
     // Site visit scheduling for P&E
     if ((role === "pne" || role === "spoc") && (stage.id === "site-visit" || stage.id === "slotting")) {
       setSiteVisitReqId(reqId);
+      return;
+    }
+
+    // Site visit form for P&E
+    if (stage.id === "site-visit-form" && stage.actions && stage.actions.length > 0) {
+      setActionModalReqId(reqId);
+      setActionModalAction(stage.actions[0]);
       return;
     }
 
@@ -334,7 +344,7 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
                           onClick={() => handleApprove(req.id)}
                           className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold bg-success/10 text-success hover:bg-success/20 transition-all active:scale-[0.97]"
                         >
-                          <CheckCircle2 className="w-4 h-4" /> {(role === "pne" || role === "spoc") && (currentStage.id === "site-visit" || currentStage.id === "slotting") ? "Schedule Slot" : "Approve"}
+                          <CheckCircle2 className="w-4 h-4" /> {(role === "pne" || role === "spoc") && (currentStage.id === "site-visit" || currentStage.id === "slotting") ? "Schedule Slot" : currentStage.id === "site-visit-form" ? "Fill Site Visit Form" : "Approve"}
                         </button>
                         <button
                           onClick={() => setRejectModalId(req.id)}
@@ -558,6 +568,21 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Site Visit Form Modal */}
+      {actionModalAction && (
+        <WorkflowActionModal
+          open={!!actionModalReqId}
+          onClose={() => { setActionModalReqId(null); setActionModalAction(null); }}
+          onSubmit={() => {
+            if (actionModalReqId) advanceStage(actionModalReqId);
+            setActionModalReqId(null);
+            setActionModalAction(null);
+          }}
+          requestId={actionModalReqId || ""}
+          action={actionModalAction}
+        />
+      )}
     </div>
   );
 };

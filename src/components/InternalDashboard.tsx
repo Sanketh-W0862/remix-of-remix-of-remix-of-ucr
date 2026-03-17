@@ -395,6 +395,61 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
                                 </div>
                               </>
                             )}
+
+                            {/* ── Load & Appliances ── */}
+                            {req.loadData && (
+                              <>
+                                <div className="col-span-2 border-t border-border/50 my-1" />
+                                <div className="col-span-2 mb-1">
+                                  <span className="text-xs font-semibold text-primary uppercase tracking-wider">Load Information</span>
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">Method:</span>
+                                  <span className="ml-2 text-foreground capitalize">{req.loadData.method === "calculator" ? "AI Calculator" : "Document Upload"}</span>
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">Total Load:</span>
+                                  <span className="ml-2 text-foreground font-semibold">{req.loadData.totalKW.toFixed(2)} kW</span>
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">Max Demand:</span>
+                                  <span className="ml-2 text-foreground font-semibold">{req.loadData.totalKVA.toFixed(2)} kVA</span>
+                                </div>
+                                {req.loadData.docUploaded && (
+                                  <div>
+                                    <span className="text-muted-foreground">Load Document:</span>
+                                    <span className="ml-2 text-success font-medium">Uploaded</span>
+                                  </div>
+                                )}
+                                {req.loadData.appliances && req.loadData.appliances.length > 0 && (
+                                  <div className="col-span-2 mt-1">
+                                    <span className="text-muted-foreground text-xs">Appliance Breakdown:</span>
+                                    <div className="mt-1.5 rounded-lg border border-border/50 overflow-hidden">
+                                      <table className="w-full text-xs">
+                                        <thead>
+                                          <tr className="bg-muted/50">
+                                            <th className="text-left px-3 py-1.5 font-medium text-muted-foreground">Appliance</th>
+                                            <th className="text-center px-3 py-1.5 font-medium text-muted-foreground">Qty</th>
+                                            <th className="text-right px-3 py-1.5 font-medium text-muted-foreground">kW/unit</th>
+                                            <th className="text-right px-3 py-1.5 font-medium text-muted-foreground">Total kW</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {req.loadData.appliances.map((a) => (
+                                            <tr key={a.name} className="border-t border-border/30">
+                                              <td className="px-3 py-1.5 text-foreground">{a.name}</td>
+                                              <td className="px-3 py-1.5 text-center text-foreground">{a.qty}</td>
+                                              <td className="px-3 py-1.5 text-right text-muted-foreground">{a.kw.toFixed(3)}</td>
+                                              <td className="px-3 py-1.5 text-right text-foreground font-medium">{(a.kw * a.qty).toFixed(2)}</td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  </div>
+                                )}
+                              </>
+                            )}
                           </div>
                         </motion.div>
                       )}

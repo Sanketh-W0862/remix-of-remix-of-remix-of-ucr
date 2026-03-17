@@ -90,8 +90,15 @@ export function useRequestStore() {
     globalRequests = globalRequests.map((r) => {
       if (r.id !== requestId) return r;
       const stages = getWorkflowStages(r.workflowType);
-      return { ...r, stageIndex: Math.min(r.stageIndex + 1, stages.length - 1), rejectionReason: undefined };
+      return { ...r, stageIndex: Math.min(r.stageIndex + 1, stages.length - 1), rejectionReason: undefined, completedActions: [] };
     });
+    notify();
+  }, []);
+
+  const markActionCompleted = useCallback((requestId: string, completedActions: string[]) => {
+    globalRequests = globalRequests.map((r) =>
+      r.id === requestId ? { ...r, completedActions } : r
+    );
     notify();
   }, []);
 

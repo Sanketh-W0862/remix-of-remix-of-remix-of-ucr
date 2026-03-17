@@ -13,6 +13,7 @@ import { getWorkflowStages, getCurrentStage, getTimelineLabels, getWorkflowLabel
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import WorkflowActionModal, { type WorkflowAction } from "./WorkflowActionModal";
 
 interface InternalDashboardProps {
   role: UserRole;

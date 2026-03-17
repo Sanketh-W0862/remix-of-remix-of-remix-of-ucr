@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Upload, CheckCircle2, FileText, AlertTriangle } from "lucide-react";
-import { useState } from "react";
+import React, { useState } from "react";
 
 export interface WorkflowActionField {
   name: string;

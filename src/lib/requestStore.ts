@@ -27,6 +27,7 @@ export interface ConnectionRequest {
   userDetails?: RequestUserDetails;
   sdDecision?: SdDecision;
   sdWaiverProof?: string;
+  sdAmount?: string;
 }
 
 export const INITIAL_REQUESTS: ConnectionRequest[] = [

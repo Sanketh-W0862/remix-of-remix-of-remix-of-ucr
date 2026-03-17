@@ -134,7 +134,12 @@ export const WORKFLOWS: Record<WorkflowType, WorkflowStage[]> = {
       actions: METER_ACTIONS,
     },
     { id: "slotting", label: "Slotting", userActionRequired: false },
-    { id: "site-visit", label: "Site Visit", userActionRequired: false },
+    {
+      id: "site-visit-form",
+      label: "Site Visit Form",
+      userActionRequired: false,
+      actions: [SITE_VISIT_FORM_ACTION],
+    },
     { id: "activated", label: "Connection Activated", userActionRequired: false },
   ],
 

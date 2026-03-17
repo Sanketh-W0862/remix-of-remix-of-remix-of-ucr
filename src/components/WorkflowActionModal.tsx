@@ -169,7 +169,8 @@ const WorkflowActionModal = ({ open, onClose, onSubmit, requestId, action }: Wor
                         />
                       )}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <div className="flex gap-3 mt-6 shrink-0">

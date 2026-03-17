@@ -2,10 +2,18 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Upload, CheckCircle2, FileText, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 
+export interface WorkflowActionField {
+  name: string;
+  label: string;
+  type: "file" | "text" | "textarea" | "date" | "number" | "select";
+  options?: string[];
+  autoValue?: string;
+}
+
 export interface WorkflowAction {
   label: string;
   type: "upload" | "confirm" | "choice";
-  fields?: { name: string; label: string; type: "file" | "text" | "textarea" | "date" }[];
+  fields?: WorkflowActionField[];
 }
 
 interface WorkflowActionModalProps {

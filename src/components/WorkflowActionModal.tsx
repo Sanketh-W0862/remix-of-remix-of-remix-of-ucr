@@ -78,7 +78,7 @@ const WorkflowActionModal = ({ open, onClose, onSubmit, requestId, action }: Wor
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative z-10 w-full max-w-md glass-card-elevated p-6"
+            className="relative z-10 w-full max-w-md max-h-[85vh] glass-card-elevated p-6 flex flex-col overflow-hidden"
           >
             <button onClick={onClose} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors">
               <X className="w-5 h-5" />
@@ -94,7 +94,7 @@ const WorkflowActionModal = ({ open, onClose, onSubmit, requestId, action }: Wor
               </motion.div>
             ) : (
               <>
-                <div className="flex items-center gap-3 mb-5">
+                <div className="flex items-center gap-3 mb-5 shrink-0">
                   <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
                     <AlertTriangle className="w-5 h-5 text-accent" />
                   </div>
@@ -104,7 +104,7 @@ const WorkflowActionModal = ({ open, onClose, onSubmit, requestId, action }: Wor
                   </div>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-4 overflow-y-auto flex-1 min-h-0 pr-1">
                   {fields.map((field) => (
                     <div key={field.name}>
                       <label className="block text-sm font-medium text-foreground mb-1.5">{field.label}</label>
@@ -170,7 +170,7 @@ const WorkflowActionModal = ({ open, onClose, onSubmit, requestId, action }: Wor
                   ))}
                 </div>
 
-                <div className="flex gap-3 mt-6">
+                <div className="flex gap-3 mt-6 shrink-0">
                   <button onClick={onClose} className="btn-secondary flex-1">Cancel</button>
                   <button onClick={handleSubmit} className="btn-primary flex-1">Submit</button>
                 </div>

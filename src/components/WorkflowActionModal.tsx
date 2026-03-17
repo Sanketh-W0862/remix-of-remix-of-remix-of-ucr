@@ -137,12 +137,32 @@ const WorkflowActionModal = ({ open, onClose, onSubmit, requestId, action }: Wor
                           value={textValues[field.name] || ""}
                           onChange={(e) => setTextValues((prev) => ({ ...prev, [field.name]: e.target.value }))}
                         />
+                      ) : field.type === "number" ? (
+                        <input
+                          type="number"
+                          className="input-glass w-full"
+                          placeholder={`Enter ${field.label.toLowerCase()}...`}
+                          value={textValues[field.name] || ""}
+                          onChange={(e) => setTextValues((prev) => ({ ...prev, [field.name]: e.target.value }))}
+                        />
+                      ) : field.type === "select" && field.options ? (
+                        <select
+                          className="input-glass w-full"
+                          value={textValues[field.name] || ""}
+                          onChange={(e) => setTextValues((prev) => ({ ...prev, [field.name]: e.target.value }))}
+                        >
+                          <option value="">Select {field.label.toLowerCase()}...</option>
+                          {field.options.map((opt) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
                       ) : (
                         <input
                           type="text"
                           className="input-glass w-full"
                           placeholder={`Enter ${field.label.toLowerCase()}...`}
                           value={textValues[field.name] || ""}
+                          readOnly={!!field.autoValue}
                           onChange={(e) => setTextValues((prev) => ({ ...prev, [field.name]: e.target.value }))}
                         />
                       )}

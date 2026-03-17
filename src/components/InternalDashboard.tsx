@@ -568,6 +568,21 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Site Visit Form Modal */}
+      {actionModalAction && (
+        <WorkflowActionModal
+          open={!!actionModalReqId}
+          onClose={() => { setActionModalReqId(null); setActionModalAction(null); }}
+          onSubmit={() => {
+            if (actionModalReqId) advanceStage(actionModalReqId);
+            setActionModalReqId(null);
+            setActionModalAction(null);
+          }}
+          requestId={actionModalReqId || ""}
+          action={actionModalAction}
+        />
+      )}
     </div>
   );
 };

@@ -12,6 +12,20 @@ export interface RequestUserDetails {
 
 export type SdDecision = "collected" | "pending" | "waived";
 
+export interface LoadAppliance {
+  name: string;
+  kw: number;
+  qty: number;
+}
+
+export interface LoadData {
+  method: "calculator" | "upload";
+  totalKW: number;
+  totalKVA: number;
+  appliances?: LoadAppliance[];
+  docUploaded?: boolean;
+}
+
 export interface ConnectionRequest {
   id: string;
   utility: string;
@@ -28,7 +42,8 @@ export interface ConnectionRequest {
   sdDecision?: SdDecision;
   sdWaiverProof?: string;
   sdAmount?: string;
-  completedActions?: string[]; // tracks submitted action labels within a stage
+  completedActions?: string[];
+  loadData?: LoadData;
 }
 
 export const INITIAL_REQUESTS: ConnectionRequest[] = [

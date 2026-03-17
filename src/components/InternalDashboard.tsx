@@ -92,10 +92,11 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
 
   const handleSdSubmit = () => {
     if (sdModalReqId && sdChoice) {
-      setSdDecision(sdModalReqId, sdChoice, sdChoice === "waived" ? sdWaiverFile : undefined);
+      setSdDecision(sdModalReqId, sdChoice, sdChoice === "waived" ? sdWaiverFile : undefined, sdChoice === "pending" ? sdAmountValue : undefined);
       setSdModalReqId(null);
       setSdChoice(null);
       setSdWaiverFile("");
+      setSdAmountValue("");
     }
   };
 

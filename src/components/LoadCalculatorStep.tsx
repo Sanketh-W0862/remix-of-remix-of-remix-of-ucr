@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Calculator, Upload, Plus, Minus, Zap } from "lucide-react";
+import { ArrowLeft, ArrowRight, Calculator, Upload, Plus, Minus, Zap, Trash2 } from "lucide-react";
 
 interface LoadCalculatorStepProps {
   onNext: (data: any) => void;
@@ -18,6 +18,13 @@ const DEFAULT_APPLIANCES = [
   { name: "Refrigerator", kw: 0.15, icon: "🧊" },
 ];
 
+interface CustomAppliance {
+  id: string;
+  name: string;
+  kw: number;
+  qty: number;
+}
+
 const LoadCalculatorStep = ({ onNext, onBack }: LoadCalculatorStepProps) => {
   const [method, setMethod] = useState<"calculator" | "upload">("calculator");
   const [quantities, setQuantities] = useState<Record<string, number>>(
@@ -30,9 +37,10 @@ const LoadCalculatorStep = ({ onNext, onBack }: LoadCalculatorStepProps) => {
   const [manualKW, setManualKW] = useState("");
   const [manualKVA, setManualKVA] = useState("");
 
-  // Others section
-  const [otherName, setOtherName] = useState("");
-  const [otherKW, setOtherKW] = useState("");
+  // Custom appliances
+  const [customAppliances, setCustomAppliances] = useState<CustomAppliance[]>([]);
+  const [newName, setNewName] = useState("");
+  const [newKW, setNewKW] = useState("");
 
   const updateQty = (name: string, delta: number) => {
     setQuantities((prev) => ({
@@ -46,10 +54,39 @@ const LoadCalculatorStep = ({ onNext, onBack }: LoadCalculatorStepProps) => {
     setKwValues((prev) => ({ ...prev, [name]: isNaN(num) ? 0 : num }));
   };
 
+  const addCustomAppliance = () => {
+    const kw = parseFloat(newKW);
+    if (!newName.trim() || isNaN(kw) || kw <= 0) return;
+    setCustomAppliances((prev) => [
+      ...prev,
+      { id: crypto.randomUUID(), name: newName.trim(), kw, qty: 1 },
+    ]);
+    setNewName("");
+    setNewKW("");
+  };
+
+  const updateCustomQty = (id: string, delta: number) => {
+    setCustomAppliances((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, qty: Math.max(0, a.qty + delta) } : a))
+    );
+  };
+
+  const updateCustomKw = (id: string, value: string) => {
+    const num = parseFloat(value);
+    setCustomAppliances((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, kw: isNaN(num) ? 0 : num } : a))
+    );
+  };
+
+  const removeCustom = (id: string) => {
+    setCustomAppliances((prev) => prev.filter((a) => a.id !== id));
+  };
+
+  const customKW = customAppliances.reduce((sum, a) => sum + a.kw * a.qty, 0);
   const calcKW = DEFAULT_APPLIANCES.reduce(
     (sum, a) => sum + (kwValues[a.name] || 0) * (quantities[a.name] || 0),
     0
-  ) + (parseFloat(otherKW) || 0);
+  ) + customKW;
   const calcKVA = calcKW / 0.8;
 
   const displayKW = method === "upload" && manualKW ? parseFloat(manualKW) || 0 : calcKW;
@@ -114,41 +151,87 @@ const LoadCalculatorStep = ({ onNext, onBack }: LoadCalculatorStepProps) => {
             </div>
           </div>
 
-          {/* Others section */}
+          {/* Custom Appliances */}
           <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-foreground mb-4">Others</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-4">Other Appliances</h3>
             <p className="text-sm text-muted-foreground mb-4">Add custom appliances not listed above</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
+
+            {/* List of added custom appliances */}
+            {customAppliances.length > 0 && (
+              <div className="space-y-3 mb-4">
+                {customAppliances.map((appliance) => (
+                  <div
+                    key={appliance.id}
+                    className={`p-4 rounded-xl border transition-all ${
+                      appliance.qty > 0 ? "border-primary/30 bg-primary/5" : "border-border"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">⚡</span>
+                        <h4 className="font-medium text-foreground text-sm">{appliance.name}</h4>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => updateCustomQty(appliance.id, -1)} className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors">
+                          <Minus className="w-3 h-3 text-foreground" />
+                        </button>
+                        <span className="w-8 text-center font-semibold text-foreground">{appliance.qty}</span>
+                        <button onClick={() => updateCustomQty(appliance.id, 1)} className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center hover:opacity-90 transition-opacity">
+                          <Plus className="w-3 h-3 text-primary-foreground" />
+                        </button>
+                        <button onClick={() => removeCustom(appliance.id)} className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center hover:bg-destructive/20 transition-colors ml-1">
+                          <Trash2 className="w-3 h-3 text-destructive" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-muted-foreground whitespace-nowrap">kW per unit:</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.001"
+                        value={appliance.kw}
+                        onChange={(e) => updateCustomKw(appliance.id, e.target.value)}
+                        className="flex h-8 w-full rounded-lg border border-input bg-background px-2 py-1 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add new custom appliance */}
+            <div className="flex gap-3 items-end">
+              <div className="flex-1">
                 <label className="block text-sm font-medium text-foreground mb-1.5">Appliance Name</label>
                 <input
                   type="text"
-                  value={otherName}
-                  onChange={(e) => setOtherName(e.target.value)}
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
                   placeholder="e.g. Industrial Motor"
                   className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">Power (kW)</label>
+              <div className="w-28">
+                <label className="block text-sm font-medium text-foreground mb-1.5">kW</label>
                 <input
                   type="number"
                   min="0"
                   step="0.01"
-                  value={otherKW}
-                  onChange={(e) => setOtherKW(e.target.value)}
+                  value={newKW}
+                  onChange={(e) => setNewKW(e.target.value)}
                   placeholder="e.g. 5.0"
                   className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 />
               </div>
+              <button
+                onClick={addCustomAppliance}
+                disabled={!newName.trim() || !newKW || parseFloat(newKW) <= 0}
+                className="h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" /> Add
+              </button>
             </div>
-            {otherKW && parseFloat(otherKW) > 0 && (
-              <div className="mt-3 p-2 rounded-lg bg-primary/5 border border-primary/10">
-                <p className="text-xs text-muted-foreground">
-                  {otherName || "Custom appliance"}: {parseFloat(otherKW).toFixed(2)} kW added to total
-                </p>
-              </div>
-            )}
           </div>
 
           {/* Summary */}
@@ -177,7 +260,7 @@ const LoadCalculatorStep = ({ onNext, onBack }: LoadCalculatorStepProps) => {
               <div className="mt-4 p-3 rounded-lg bg-primary/5 border border-primary/10">
                 <p className="text-xs text-muted-foreground">
                   Breakdown: {DEFAULT_APPLIANCES.filter((a) => quantities[a.name] > 0).map((a) => `${quantities[a.name]}× ${a.name} (${((kwValues[a.name] || 0) * quantities[a.name]).toFixed(2)} kW)`).join(" • ")}
-                  {otherKW && parseFloat(otherKW) > 0 ? ` • ${otherName || "Other"} (${parseFloat(otherKW).toFixed(2)} kW)` : ""}
+                  {customAppliances.filter((a) => a.qty > 0).map((a) => ` • ${a.qty}× ${a.name} (${(a.kw * a.qty).toFixed(2)} kW)`).join("")}
                 </p>
               </div>
             )}
@@ -217,7 +300,7 @@ const LoadCalculatorStep = ({ onNext, onBack }: LoadCalculatorStepProps) => {
 
       <div className="flex justify-between mt-8">
         <button onClick={onBack} className="btn-secondary flex items-center gap-2"><ArrowLeft className="w-4 h-4" /> Back</button>
-        <button onClick={() => onNext({ method, quantities, kwValues, totalKW: displayKW, totalKVA: displayKVA, docUploaded, otherName, otherKW })} className="btn-primary flex items-center gap-2">Continue <ArrowRight className="w-4 h-4" /></button>
+        <button onClick={() => onNext({ method, quantities, kwValues, totalKW: displayKW, totalKVA: displayKVA, docUploaded, customAppliances })} className="btn-primary flex items-center gap-2">Continue <ArrowRight className="w-4 h-4" /></button>
       </div>
     </motion.div>
   );

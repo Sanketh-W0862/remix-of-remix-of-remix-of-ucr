@@ -218,7 +218,7 @@ export function getWorkflowLabel(type: WorkflowType): string {
     "power-temporary": "Power – Temporary",
     water: "Water – Existing Meter",
     "water-existing-meter": "Water – Existing Meter",
-    "water-no-meter": "Water – No Meter Path",
+    "water-no-meter": "Water – New Meter Path",
   };
   return labels[type];
 }

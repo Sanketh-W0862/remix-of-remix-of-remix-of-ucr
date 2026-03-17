@@ -161,6 +161,7 @@ export function useRequestStore() {
   return {
     requests: globalRequests,
     advanceStage,
+    markActionCompleted,
     rejectRequest,
     clearRejection,
     scheduleSiteVisit,

@@ -16,7 +16,7 @@ interface ConnectionDashboardProps {
 type DashFilter = "active" | "pending" | "completed";
 
 const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProps) => {
-  const { requests, advanceStage, clearRejection } = useRequestStore();
+  const { requests, advanceStage, markActionCompleted, clearRejection } = useRequestStore();
   const [modalOpen, setModalOpen] = useState(false);
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
   const [activeAction, setActiveAction] = useState<WorkflowAction | null>(null);

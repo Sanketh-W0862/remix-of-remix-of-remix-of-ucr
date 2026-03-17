@@ -248,10 +248,55 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
                           className="mb-4 p-3 rounded-lg bg-muted/30 border border-border/50"
                         >
                           <div className="grid grid-cols-2 gap-3 text-sm">
+                            {/* ── Request Information ── */}
+                            <div className="col-span-2 mb-1">
+                              <span className="text-xs font-semibold text-primary uppercase tracking-wider">Request Information</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Request ID:</span>
+                              <span className="ml-2 text-foreground font-medium">{req.id}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Submitted:</span>
+                              <span className="ml-2 text-foreground">{req.date}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Utility:</span>
+                              <span className="ml-2 text-foreground">{req.utility}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Connection Type:</span>
+                              <span className="ml-2 text-foreground">{req.type}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Workflow:</span>
+                              <span className="ml-2 text-foreground">{getWorkflowLabel(req.workflowType)}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Space ID:</span>
+                              <span className="ml-2 text-foreground">{req.space}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Current Stage:</span>
+                              <span className="ml-2 text-foreground font-medium">{currentStage.label}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Progress:</span>
+                              <span className="ml-2 text-foreground">{Math.min(req.stageIndex + 1, stages.length)} / {stages.length} steps</span>
+                            </div>
+                            {req.expiry && (
+                              <div>
+                                <span className="text-muted-foreground">Expiry:</span>
+                                <span className="ml-2 text-warning font-medium">{req.expiry}</span>
+                              </div>
+                            )}
+
+                            {/* ── Customer Details ── */}
                             {req.userDetails && (
                               <>
+                                <div className="col-span-2 border-t border-border/50 my-1" />
                                 <div className="col-span-2 mb-1">
-                                  <span className="text-xs font-semibold text-primary uppercase tracking-wider">User Details</span>
+                                  <span className="text-xs font-semibold text-primary uppercase tracking-wider">Customer Details</span>
                                 </div>
                                 {req.userDetails.customerName && (
                                   <div>
@@ -283,59 +328,72 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
                                     <span className="ml-2 text-foreground">{req.userDetails.email}</span>
                                   </div>
                                 )}
-                                <div className="col-span-2">
-                                  <span className="text-muted-foreground">Space ID:</span>
-                                  <span className="ml-2 text-foreground">{req.space}</span>
-                                </div>
-                                <div className="col-span-2 border-t border-border/50 my-1" />
                               </>
                             )}
-                            <div>
-                              <span className="text-muted-foreground">Submitted:</span>
-                              <span className="ml-2 text-foreground">{req.date}</span>
-                            </div>
-                            <div>
-                            <span className="text-muted-foreground">Workflow:</span>
-                            <span className="ml-2 text-foreground">{getWorkflowLabel(req.workflowType)}</span>
-                            </div>
-                            {req.siteVisitDate && (
-                              <div className="col-span-2">
-                                <span className="text-muted-foreground">Site Visit:</span>
-                                <span className="ml-2 text-info font-medium">{req.siteVisitDate}</span>
-                              </div>
-                            )}
-                            {req.sdDecision && (
-                              <div className="col-span-2">
-                                <span className="text-muted-foreground">SD Status:</span>
-                                <span className={`ml-2 font-medium ${
-                                  req.sdDecision === "waived" ? "text-warning" :
-                                  req.sdDecision === "collected" ? "text-success" : "text-accent"
-                                }`}>
-                                  {req.sdDecision === "waived" ? "Waived" :
-                                   req.sdDecision === "collected" ? "Already Collected" : "Pending Collection"}
-                                </span>
-                                {req.sdDecision === "pending" && req.sdAmount && (
-                                  <span className="ml-2 text-foreground font-semibold">₹{req.sdAmount}</span>
-                                )}
-                              </div>
-                            )}
-                            {req.expiry && (
-                              <div>
-                                <span className="text-muted-foreground">Expiry:</span>
-                                <span className="ml-2 text-warning">{req.expiry}</span>
-                              </div>
-                            )}
-                            {req.submittedDocs && req.submittedDocs.length > 0 && (
-                              <div className="col-span-2">
-                                <span className="text-muted-foreground">Documents:</span>
-                                <div className="mt-1 flex flex-wrap gap-1">
-                                  {req.submittedDocs.map((doc) => (
-                                    <span key={doc} className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-md">
-                                      <FileText className="w-3 h-3" /> {doc}
-                                    </span>
-                                  ))}
+
+                            {/* ── Workflow Status Details ── */}
+                            {(req.sdDecision || req.siteVisitDate || (req.completedActions && req.completedActions.length > 0)) && (
+                              <>
+                                <div className="col-span-2 border-t border-border/50 my-1" />
+                                <div className="col-span-2 mb-1">
+                                  <span className="text-xs font-semibold text-primary uppercase tracking-wider">Workflow Status</span>
                                 </div>
-                              </div>
+                                {req.sdDecision && (
+                                  <div className="col-span-2">
+                                    <span className="text-muted-foreground">SD Status:</span>
+                                    <span className={`ml-2 font-medium ${
+                                      req.sdDecision === "waived" ? "text-warning" :
+                                      req.sdDecision === "collected" ? "text-success" : "text-accent"
+                                    }`}>
+                                      {req.sdDecision === "waived" ? "Waived" :
+                                       req.sdDecision === "collected" ? "Already Collected" : "Pending Collection"}
+                                    </span>
+                                    {req.sdDecision === "pending" && req.sdAmount && (
+                                      <span className="ml-2 text-foreground font-semibold">₹{req.sdAmount}</span>
+                                    )}
+                                    {req.sdDecision === "waived" && req.sdWaiverProof && (
+                                      <span className="ml-2 text-muted-foreground text-xs">(Waiver proof attached)</span>
+                                    )}
+                                  </div>
+                                )}
+                                {req.siteVisitDate && (
+                                  <div className="col-span-2">
+                                    <span className="text-muted-foreground">Site Visit:</span>
+                                    <span className="ml-2 text-info font-medium">{req.siteVisitDate}</span>
+                                  </div>
+                                )}
+                                {req.completedActions && req.completedActions.length > 0 && (
+                                  <div className="col-span-2">
+                                    <span className="text-muted-foreground">Actions Completed:</span>
+                                    <div className="mt-1 flex flex-wrap gap-1">
+                                      {req.completedActions.map((action) => (
+                                        <span key={action} className="inline-flex items-center gap-1 px-2 py-0.5 bg-success/10 text-success text-xs rounded-md">
+                                          <CheckCircle2 className="w-3 h-3" /> {action}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </>
+                            )}
+
+                            {/* ── Documents ── */}
+                            {req.submittedDocs && req.submittedDocs.length > 0 && (
+                              <>
+                                <div className="col-span-2 border-t border-border/50 my-1" />
+                                <div className="col-span-2 mb-1">
+                                  <span className="text-xs font-semibold text-primary uppercase tracking-wider">Documents</span>
+                                </div>
+                                <div className="col-span-2">
+                                  <div className="flex flex-wrap gap-1">
+                                    {req.submittedDocs.map((doc) => (
+                                      <span key={doc} className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-md">
+                                        <FileText className="w-3 h-3" /> {doc}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              </>
                             )}
                           </div>
                         </motion.div>

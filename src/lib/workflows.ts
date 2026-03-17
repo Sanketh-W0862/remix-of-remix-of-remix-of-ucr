@@ -72,7 +72,7 @@ const METER_ACTIONS: WorkflowAction[] = [
   {
     label: "Upload Meter Purchase Proof",
     type: "upload",
-    fields: [{ name: "meter_proof", label: "Meter Purchase Receipt", type: "file" }],
+    fields: [{ name: "meter_proof", label: "Meter Purchase Proof", type: "file" }],
   },
   {
     label: "Upload Calibration Certificate",
@@ -167,7 +167,7 @@ export const WORKFLOWS: Record<WorkflowType, WorkflowStage[]> = {
     { id: "activated", label: "Water Activated", userActionRequired: false },
   ],
 
-  // ── Water: No Meter Path ──
+  // ── Water: New Meter Path ──
   "water-no-meter": [
     { id: "submitted", label: "Submitted", userActionRequired: false },
     { id: "spoc-approval", label: "SPOC Approval", userActionRequired: false },
@@ -179,7 +179,7 @@ export const WORKFLOWS: Record<WorkflowType, WorkflowStage[]> = {
         {
           label: "Upload Meter Purchase Proof",
           type: "upload",
-          fields: [{ name: "meter_proof", label: "Meter Purchase Receipt", type: "file" }],
+          fields: [{ name: "meter_proof", label: "Meter Purchase Proof", type: "file" }],
         },
       ],
     },
@@ -218,7 +218,7 @@ export function getWorkflowLabel(type: WorkflowType): string {
     "power-temporary": "Power – Temporary",
     water: "Water – Existing Meter",
     "water-existing-meter": "Water – Existing Meter",
-    "water-no-meter": "Water – No Meter Path",
+    "water-no-meter": "Water – New Meter Path",
   };
   return labels[type];
 }

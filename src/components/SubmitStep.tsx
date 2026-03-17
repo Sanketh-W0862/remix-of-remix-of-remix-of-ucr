@@ -51,7 +51,7 @@ const SubmitStep = ({ wizardData, onBack, onSubmit }: SubmitStepProps) => {
         rw.wfType === "power-regular" ? "Postpaid" :
         rw.wfType === "power-temporary" ? "Temporary" :
         rw.wfType === "water-existing-meter" ? "Existing Meter" :
-        rw.wfType === "water-no-meter" ? "No Meter" : "Standard";
+        rw.wfType === "water-no-meter" ? "New Meter" : "Standard";
 
       addRequest({
         utility: rw.utility,

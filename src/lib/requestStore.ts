@@ -35,7 +35,7 @@ export const INITIAL_REQUESTS: ConnectionRequest[] = [
   { id: "REQ-2024-003", utility: "Power", type: "Temporary", workflowType: "power-temporary", space: "SP0003", stageIndex: 2, date: "2024-03-01", expiry: "2024-06-01" },
   { id: "REQ-2024-004", utility: "Power", type: "Postpaid", workflowType: "power-regular", space: "SP0004", stageIndex: 5, date: "2024-03-10" },
   { id: "REQ-2024-005", utility: "Power", type: "Temporary", workflowType: "power-temporary", space: "SP0005", stageIndex: 7, date: "2024-01-05", expiry: "2024-04-05" },
-  { id: "REQ-2024-006", utility: "Water", type: "No Meter", workflowType: "water-no-meter", space: "SP0005", stageIndex: 2, date: "2024-03-15" },
+  { id: "REQ-2024-006", utility: "Water", type: "New Meter", workflowType: "water-no-meter", space: "SP0005", stageIndex: 2, date: "2024-03-15" },
   { id: "REQ-2024-007", utility: "Power", type: "Prepaid", workflowType: "power-prepaid", space: "SP0002", stageIndex: 1, date: "2024-03-18" },
 ];
 

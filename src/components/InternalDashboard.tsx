@@ -314,6 +314,9 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
                                   {req.sdDecision === "waived" ? "Waived" :
                                    req.sdDecision === "collected" ? "Already Collected" : "Pending Collection"}
                                 </span>
+                                {req.sdDecision === "pending" && req.sdAmount && (
+                                  <span className="ml-2 text-foreground font-semibold">₹{req.sdAmount}</span>
+                                )}
                               </div>
                             )}
                             {req.expiry && (

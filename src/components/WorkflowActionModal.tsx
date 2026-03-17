@@ -104,7 +104,7 @@ const WorkflowActionModal = ({ open, onClose, onSubmit, requestId, action }: Wor
                   </div>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-4 overflow-y-auto flex-1 min-h-0 pr-1">
                   {fields.map((field) => (
                     <div key={field.name}>
                       <label className="block text-sm font-medium text-foreground mb-1.5">{field.label}</label>

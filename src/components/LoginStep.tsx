@@ -71,22 +71,39 @@ const LoginStep = ({ onNext }: LoginStepProps) => {
       return;
     }
     setDocError(false);
-    onNext({
+
+    const code = isSignup
+      ? hasCode
+        ? existingCode
+        : customerForm.customerName
+          ? `CC-${Date.now()}`
+          : undefined
+      : undefined;
+
+    const loginPayload = {
       mobile,
       role: detectedRole,
       isSignup,
       companyName: isSignup ? companyName : undefined,
       contactPerson: isSignup ? contactPerson : undefined,
       email: isSignup ? email : undefined,
-      customerCode: isSignup
-        ? hasCode
-          ? existingCode
-          : customerForm.customerName
-            ? `CC-${Date.now()}`
-            : undefined
-        : undefined,
+      customerCode: code,
       customerForm: isSignup && !hasCode ? customerForm : undefined,
-    });
+    };
+
+    // Persist signup details for future logins
+    if (isSignup) {
+      registerUser({
+        mobile,
+        companyName,
+        contactPerson,
+        email,
+        customerCode: code,
+        customerForm: isSignup && !hasCode ? customerForm : undefined,
+      });
+    }
+
+    onNext(loginPayload);
   };
 
   return (

@@ -67,16 +67,18 @@ const ConnectionWizard = () => {
     const updatedData = { ...wizardData, [stepKey]: data };
     setWizardData(updatedData);
 
-    // Skip Load step for water-only OR prepaid/non-metered power (SP0002)
+    // Skip Load step for prepaid/non-metered power (SP0002)
     if (stepKey === "utility") {
       const utilities = data.selectedUtilities as string[];
-      const isWaterOnly = utilities.length > 0 && utilities.every((u: string) => u === "water");
       const spaceId = updatedData.space?.spaceId;
       const isPrepaidPower = spaceId === "SP0002" && utilities.includes("power");
-      if (isWaterOnly || isPrepaidPower) {
+      const isWaterOnly = utilities.length > 0 && utilities.every((u: string) => u === "water");
+      // Water-only goes to water demand (step 4), prepaid power skips to submit
+      if (isPrepaidPower && !isWaterOnly) {
         setCurrentStep(5); // Skip to Submit
         return;
       }
+      // Water-only or mixed: proceed to step 4 (demand/load)
     }
 
     setCurrentStep((prev) => prev + 1);

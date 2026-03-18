@@ -51,6 +51,7 @@ export interface ConnectionRequest {
   sdAmount?: string;
   completedActions?: string[];
   loadData?: LoadData;
+  waterDemand?: WaterDemandData;
 }
 
 export const INITIAL_REQUESTS: ConnectionRequest[] = [

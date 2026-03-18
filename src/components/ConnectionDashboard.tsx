@@ -2,8 +2,9 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap, Droplets, Clock, CheckCircle2, AlertCircle, Plus, BarChart3,
-  AlertTriangle, LogOut, RefreshCw, Calendar, ChevronDown, ChevronUp, FileText,
+  AlertTriangle, LogOut, RefreshCw, Calendar, ChevronDown, ChevronUp, FileText, Info,
 } from "lucide-react";
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "./ui/table";
 import WorkflowActionModal, { type WorkflowAction } from "./WorkflowActionModal";
 import { type WorkflowType, getWorkflowStages, getCurrentStage, getTimelineLabels, getWorkflowLabel } from "@/lib/workflows";
 import { useRequestStore } from "@/lib/requestStore";

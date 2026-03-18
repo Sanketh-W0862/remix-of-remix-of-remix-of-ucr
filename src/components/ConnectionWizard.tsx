@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { AnimatePresence } from "framer-motion";
-import { LogIn, FolderOpen, Zap, Calculator, Send } from "lucide-react";
+import { LogIn, FolderOpen, Zap, Calculator, Send, Droplets } from "lucide-react";
 import StepperHeader from "./StepperHeader";
 import LoginStep from "./LoginStep";
 import SpaceDocumentStep from "./SpaceDocumentStep";
 import UtilitySelectionStep from "./UtilitySelectionStep";
 import LoadCalculatorStep from "./LoadCalculatorStep";
+import WaterDemandStep from "./WaterDemandStep";
 import SubmitStep from "./SubmitStep";
 import ConnectionDashboard from "./ConnectionDashboard";
 import InternalDashboard from "./InternalDashboard";
@@ -18,7 +19,7 @@ const STEPS = [
   { id: 1, title: "Login", icon: <LogIn className="w-4 h-4" /> },
   { id: 2, title: "Space & Docs", icon: <FolderOpen className="w-4 h-4" /> },
   { id: 3, title: "Utilities", icon: <Zap className="w-4 h-4" /> },
-  { id: 4, title: "Load", icon: <Calculator className="w-4 h-4" /> },
+  { id: 4, title: "Demand", icon: <Calculator className="w-4 h-4" /> },
   { id: 5, title: "Submit", icon: <Send className="w-4 h-4" /> },
 ];
 

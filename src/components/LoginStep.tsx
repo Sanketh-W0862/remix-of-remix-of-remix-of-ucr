@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Phone, Building2, User, Mail, ArrowRight, Zap, Droplets,
@@ -59,6 +59,19 @@ const LoginStep = ({ onNext }: LoginStepProps) => {
   const toggleDoc = (doc: string) => {
     setUploadedDocs((prev) => ({ ...prev, [doc]: !prev[doc] }));
   };
+
+  // Auto-populate customer code form from signup details
+  useEffect(() => {
+    if (hasCode === false) {
+      setCustomerForm((prev) => ({
+        ...prev,
+        customerName: prev.customerName || companyName,
+        contactPersonName: prev.contactPersonName || contactPerson,
+        mobile: prev.mobile || mobile,
+        emailId: prev.emailId || email,
+      }));
+    }
+  }, [hasCode, companyName, contactPerson, mobile, email]);
 
   const cleanMobile = mobile.replace(/\D/g, "").slice(-10);
   const detectedRole = MOBILE_ROLE_MAP[cleanMobile] || "user";
@@ -327,7 +340,7 @@ const LoginStep = ({ onNext }: LoginStepProps) => {
                               All three documents are mandatory.
                             </div>
                           )}
-                        </div>
+                       </div>
                       </motion.div>
                     )}
                   </motion.div>

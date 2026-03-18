@@ -199,9 +199,9 @@ export const WORKFLOWS: Record<WorkflowType, WorkflowStage[]> = {
       userActionRequired: true,
       actions: [
         {
-          label: "Upload Meter Purchase Proof",
+          label: "Upload Calibration Certificate",
           type: "upload",
-          fields: [{ name: "meter_proof", label: "Meter Purchase Proof", type: "file" }],
+          fields: [{ name: "calibration_cert", label: "Calibration Certificate", type: "file" }],
         },
       ],
     },

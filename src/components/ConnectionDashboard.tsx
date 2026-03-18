@@ -470,6 +470,58 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
                     </div>
                   )}
 
+                   {/* Meter Recommendations for power-regular */}
+                  {actionRequired && currentStage.id === "customer-meter-upload" && req.workflowType === "power-regular" && (
+                    <div className="mt-3">
+                      <button
+                        onClick={() => setMeterRecsOpen(meterRecsOpen === req.id ? null : req.id)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-info/10 text-info hover:bg-info/20 transition-colors"
+                      >
+                        <Info className="w-3.5 h-3.5" />
+                        {meterRecsOpen === req.id ? "Hide Meter Recommendations" : "Show Meter Recommendations"}
+                      </button>
+                      <AnimatePresence>
+                        {meterRecsOpen === req.id && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="mt-2 rounded-lg border border-border overflow-hidden"
+                          >
+                            <Table>
+                              <TableHeader>
+                                <TableRow className="bg-muted/50">
+                                  <TableHead className="text-xs font-bold">Make of Energy Meter</TableHead>
+                                  <TableHead className="text-xs font-bold">Model Number</TableHead>
+                                  <TableHead className="text-xs font-bold">Connection Type</TableHead>
+                                  <TableHead className="text-xs font-bold">CT's Requirement</TableHead>
+                                  <TableHead className="text-xs font-bold">Remarks</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {[
+                                  { make: "Saral", model: "Saral -305", conn: "1-phase", ct: "NO", remark: "For Load below 60 Amps" },
+                                  { make: "Secure", model: "Sprint 350", conn: "3-phase", ct: "NO", remark: "For load below 60 Amps" },
+                                  { make: "Secure", model: "Elite 440/445", conn: "3-phase", ct: "YES", remark: "For load above 60A" },
+                                  { make: "Schneider Electric", model: "EM6400NG/Regor", conn: "3-phase", ct: "YES", remark: "For load above 60A" },
+                                  { make: "L&T", model: "WL4405", conn: "3-phase", ct: "YES", remark: "For load above 60A" },
+                                ].map((row) => (
+                                  <TableRow key={row.model}>
+                                    <TableCell className="text-xs">{row.make}</TableCell>
+                                    <TableCell className="text-xs">{row.model}</TableCell>
+                                    <TableCell className="text-xs">{row.conn}</TableCell>
+                                    <TableCell className="text-xs">{row.ct}</TableCell>
+                                    <TableCell className="text-xs">{row.remark}</TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  )}
+
                   {/* Action Buttons */}
                   {actionRequired && currentStage.actions && currentStage.actions.length > 0 && (
                     <div className="mt-4 pt-3 border-t border-border/50 flex flex-wrap gap-2">

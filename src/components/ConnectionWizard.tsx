@@ -148,9 +148,14 @@ const ConnectionWizard = () => {
           {currentStep === 3 && (
             <UtilitySelectionStep key="utility" onNext={(data) => handleNext("utility", data)} onBack={handleBack} />
           )}
-          {currentStep === 4 && (
-            <LoadCalculatorStep key="load" onNext={(data) => handleNext("load", data)} onBack={handleBack} />
-          )}
+          {currentStep === 4 && (() => {
+            const utilities = wizardData.utility?.selectedUtilities as string[] | undefined;
+            const isWaterOnly = utilities && utilities.length > 0 && utilities.every((u: string) => u === "water");
+            if (isWaterOnly) {
+              return <WaterDemandStep key="waterDemand" onNext={(data) => handleNext("waterDemand", data)} onBack={handleBack} />;
+            }
+            return <LoadCalculatorStep key="load" onNext={(data) => handleNext("load", data)} onBack={handleBack} />;
+          })()}
           {currentStep === 5 && (
             <SubmitStep key="submit" wizardData={wizardData} onBack={handleBack} onSubmit={handleSubmit} />
           )}

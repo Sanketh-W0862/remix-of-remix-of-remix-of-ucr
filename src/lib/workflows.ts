@@ -149,12 +149,6 @@ export const WORKFLOWS: Record<WorkflowType, WorkflowStage[]> = {
     { id: "submitted", label: "Submitted", userActionRequired: false },
     { id: "spoc-approval", label: "SPOC Approval", userActionRequired: false },
     { id: "slotting", label: "Slot Selection (P&E)", userActionRequired: false },
-    {
-      id: "site-visit-form",
-      label: "Site Visit Form",
-      userActionRequired: false,
-      actions: [SITE_VISIT_FORM_ACTION],
-    },
     { id: "pne-final-approval", label: "Final Approval (P&E)", userActionRequired: false },
     { id: "activated", label: "Connection Activated", userActionRequired: false },
   ],

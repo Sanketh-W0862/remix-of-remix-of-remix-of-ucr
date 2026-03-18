@@ -33,6 +33,21 @@ const ConnectionWizard = () => {
       const role = data.role as UserRole;
       setUserRole(role);
 
+      // On login (not signup), look up stored user details and merge them
+      if (!data.isSignup) {
+        const stored = getRegisteredUser(data.mobile);
+        if (stored) {
+          data = {
+            ...data,
+            companyName: stored.companyName,
+            contactPerson: stored.contactPerson,
+            email: stored.email,
+            customerCode: stored.customerCode,
+            customerForm: stored.customerForm,
+          };
+        }
+      }
+
       // Internal roles go straight to their dashboard
       if (role !== "user") {
         setShowDashboard(true);

@@ -26,6 +26,13 @@ export interface LoadData {
   docUploaded?: boolean;
 }
 
+export interface WaterDemandData {
+  domesticKL: number;
+  flushingKL: number;
+  roKL: number;
+  totalKL: number;
+}
+
 export interface ConnectionRequest {
   id: string;
   utility: string;

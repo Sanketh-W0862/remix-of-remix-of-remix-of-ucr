@@ -11,6 +11,7 @@ import ConnectionDashboard from "./ConnectionDashboard";
 import InternalDashboard from "./InternalDashboard";
 import type { UserRole } from "@/lib/roles";
 import { ROLES } from "@/lib/roles";
+import { getRegisteredUser } from "@/lib/userRegistry";
 
 // Steps without CustomerCodeStep (removed from request flow)
 const STEPS = [
@@ -31,6 +32,21 @@ const ConnectionWizard = () => {
     if (stepKey === "login") {
       const role = data.role as UserRole;
       setUserRole(role);
+
+      // On login (not signup), look up stored user details and merge them
+      if (!data.isSignup) {
+        const stored = getRegisteredUser(data.mobile);
+        if (stored) {
+          data = {
+            ...data,
+            companyName: stored.companyName,
+            contactPerson: stored.contactPerson,
+            email: stored.email,
+            customerCode: stored.customerCode,
+            customerForm: stored.customerForm,
+          };
+        }
+      }
 
       // Internal roles go straight to their dashboard
       if (role !== "user") {

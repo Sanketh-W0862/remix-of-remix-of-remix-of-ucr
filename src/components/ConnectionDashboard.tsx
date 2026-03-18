@@ -386,6 +386,32 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
                             </>
                           )}
 
+                          {/* ── Water Demand ── */}
+                          {req.waterDemand && (
+                            <>
+                              <div className="col-span-2 border-t border-border/50 my-1" />
+                              <div className="col-span-2 mb-1">
+                                <span className="text-xs font-semibold text-info uppercase tracking-wider">Water Demand (per day)</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Domestic Use:</span>
+                                <span className="ml-2 text-foreground font-semibold">{req.waterDemand.domesticKL.toFixed(1)} KL</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Flushing Use:</span>
+                                <span className="ml-2 text-foreground font-semibold">{req.waterDemand.flushingKL.toFixed(1)} KL</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">RO Water:</span>
+                                <span className="ml-2 text-foreground font-semibold">{req.waterDemand.roKL.toFixed(1)} KL</span>
+                              </div>
+                              <div className="col-span-2 p-2 rounded-lg bg-info/5 border border-info/10">
+                                <span className="text-muted-foreground">Total Daily Demand:</span>
+                                <span className="ml-2 text-info font-bold text-base">{req.waterDemand.totalKL.toFixed(1)} KL/day</span>
+                              </div>
+                            </>
+                          )}
+
                           {/* ── Workflow Status ── */}
                           {(req.sdDecision || req.siteVisitDate) && (
                             <>

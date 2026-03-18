@@ -270,13 +270,7 @@ const LoginStep = ({ onNext }: LoginStepProps) => {
                       </div>
                     )}
 
-                    {hasCode === false && (() => {
-                      // Auto-populate customer form from signup details
-                      if (companyName && !customerForm.customerName) handleFieldChange("customerName", companyName);
-                      if (contactPerson && !customerForm.contactPersonName) handleFieldChange("contactPersonName", contactPerson);
-                      if (mobile && !customerForm.mobile) handleFieldChange("mobile", mobile);
-                      if (email && !customerForm.emailId) handleFieldChange("emailId", email);
-                      return (
+                    {hasCode === false && (
                       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
                         <p className="text-xs text-muted-foreground">Fill in details to create your Customer Code</p>
                         <div className="grid grid-cols-2 gap-3">

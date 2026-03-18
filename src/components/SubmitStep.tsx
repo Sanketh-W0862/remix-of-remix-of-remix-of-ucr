@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, CheckCircle2, Send, Zap, FileText, MapPin, Calculator } from "lucide-react";
-import { addRequest, type RequestUserDetails, type LoadData, type LoadAppliance } from "@/lib/requestStore";
+import { addRequest, type RequestUserDetails, type LoadData, type LoadAppliance, type WaterDemandData } from "@/lib/requestStore";
 import { resolveWorkflowType } from "@/lib/workflows";
 import type { WorkflowType } from "@/lib/workflows";
 

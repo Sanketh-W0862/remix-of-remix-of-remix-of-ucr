@@ -60,6 +60,19 @@ const LoginStep = ({ onNext }: LoginStepProps) => {
     setUploadedDocs((prev) => ({ ...prev, [doc]: !prev[doc] }));
   };
 
+  // Auto-populate customer code form from signup details
+  useEffect(() => {
+    if (hasCode === false) {
+      setCustomerForm((prev) => ({
+        ...prev,
+        customerName: prev.customerName || companyName,
+        contactPersonName: prev.contactPersonName || contactPerson,
+        mobile: prev.mobile || mobile,
+        emailId: prev.emailId || email,
+      }));
+    }
+  }, [hasCode, companyName, contactPerson, mobile, email]);
+
   const cleanMobile = mobile.replace(/\D/g, "").slice(-10);
   const detectedRole = MOBILE_ROLE_MAP[cleanMobile] || "user";
 

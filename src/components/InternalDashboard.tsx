@@ -80,10 +80,17 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
       return;
     }
 
-    // Site visit form for P&E
+    // Site visit form for P&E — pre-populate load value
     if (stage.id === "site-visit-form" && stage.actions && stage.actions.length > 0) {
+      const action = JSON.parse(JSON.stringify(stage.actions[0]));
+      if (req.loadData && action.fields) {
+        const loadField = action.fields.find((f: any) => f.name === "details_of_load");
+        if (loadField) {
+          loadField.autoValue = `${req.loadData.totalKW.toFixed(2)} kW / ${req.loadData.totalKVA.toFixed(2)} kVA`;
+        }
+      }
       setActionModalReqId(reqId);
-      setActionModalAction(stage.actions[0]);
+      setActionModalAction(action);
       return;
     }
 

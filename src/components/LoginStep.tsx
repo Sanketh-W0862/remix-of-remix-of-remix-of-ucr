@@ -333,9 +333,10 @@ const LoginStep = ({ onNext }: LoginStepProps) => {
                               All three documents are mandatory.
                             </div>
                           )}
-                        </div>
+                       </div>
                       </motion.div>
-                    )}
+                      );
+                    })()}
                   </motion.div>
                 )}
 

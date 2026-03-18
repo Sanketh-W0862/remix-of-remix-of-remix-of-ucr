@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, CheckCircle2, Send, Zap, FileText, MapPin, Calculator } from "lucide-react";
-import { addRequest, type RequestUserDetails, type LoadData, type LoadAppliance } from "@/lib/requestStore";
+import { addRequest, type RequestUserDetails, type LoadData, type LoadAppliance, type WaterDemandData } from "@/lib/requestStore";
 import { resolveWorkflowType } from "@/lib/workflows";
 import type { WorkflowType } from "@/lib/workflows";
 
@@ -78,6 +78,18 @@ const SubmitStep = ({ wizardData, onBack, onSubmit }: SubmitStepProps) => {
       };
     }
 
+    // Build water demand data
+    let waterDemand: WaterDemandData | undefined;
+    if (wizardData.waterDemand) {
+      const wd = wizardData.waterDemand;
+      waterDemand = {
+        domesticKL: wd.domesticKL || 0,
+        flushingKL: wd.flushingKL || 0,
+        roKL: wd.roKL || 0,
+        totalKL: wd.totalKL || 0,
+      };
+    }
+
     for (const rw of resolvedWorkflows) {
       const typeLabel =
         rw.wfType === "power-prepaid" ? "Prepaid" :
@@ -94,6 +106,7 @@ const SubmitStep = ({ wizardData, onBack, onSubmit }: SubmitStepProps) => {
         expiry: rw.wfType === "power-temporary" ? wizardData.utility?.tempDates?.to : undefined,
         userDetails,
         loadData: rw.utility === "Power" ? loadData : undefined,
+        waterDemand: rw.utility === "Water" ? waterDemand : undefined,
       });
     }
 

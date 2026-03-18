@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { AnimatePresence } from "framer-motion";
-import { LogIn, FolderOpen, Zap, Calculator, Send } from "lucide-react";
+import { LogIn, FolderOpen, Zap, Calculator, Send, Droplets } from "lucide-react";
 import StepperHeader from "./StepperHeader";
 import LoginStep from "./LoginStep";
 import SpaceDocumentStep from "./SpaceDocumentStep";
 import UtilitySelectionStep from "./UtilitySelectionStep";
 import LoadCalculatorStep from "./LoadCalculatorStep";
+import WaterDemandStep from "./WaterDemandStep";
 import SubmitStep from "./SubmitStep";
 import ConnectionDashboard from "./ConnectionDashboard";
 import InternalDashboard from "./InternalDashboard";
@@ -18,7 +19,7 @@ const STEPS = [
   { id: 1, title: "Login", icon: <LogIn className="w-4 h-4" /> },
   { id: 2, title: "Space & Docs", icon: <FolderOpen className="w-4 h-4" /> },
   { id: 3, title: "Utilities", icon: <Zap className="w-4 h-4" /> },
-  { id: 4, title: "Load", icon: <Calculator className="w-4 h-4" /> },
+  { id: 4, title: "Demand", icon: <Calculator className="w-4 h-4" /> },
   { id: 5, title: "Submit", icon: <Send className="w-4 h-4" /> },
 ];
 
@@ -66,29 +67,31 @@ const ConnectionWizard = () => {
     const updatedData = { ...wizardData, [stepKey]: data };
     setWizardData(updatedData);
 
-    // Skip Load step for water-only OR prepaid/non-metered power (SP0002)
+    // Skip Load step for prepaid/non-metered power (SP0002)
     if (stepKey === "utility") {
       const utilities = data.selectedUtilities as string[];
-      const isWaterOnly = utilities.length > 0 && utilities.every((u: string) => u === "water");
       const spaceId = updatedData.space?.spaceId;
       const isPrepaidPower = spaceId === "SP0002" && utilities.includes("power");
-      if (isWaterOnly || isPrepaidPower) {
+      const isWaterOnly = utilities.length > 0 && utilities.every((u: string) => u === "water");
+      // Water-only goes to water demand (step 4), prepaid power skips to submit
+      if (isPrepaidPower && !isWaterOnly) {
         setCurrentStep(5); // Skip to Submit
         return;
       }
+      // Water-only or mixed: proceed to step 4 (demand/load)
     }
 
     setCurrentStep((prev) => prev + 1);
   };
 
   const handleBack = () => {
-    // If on Submit (step 5) and load was skipped, go back to Utilities (step 3)
+    // If on Submit (step 5) and load/demand was skipped, go back to Utilities (step 3)
     if (currentStep === 5 && wizardData.utility) {
       const utilities = wizardData.utility.selectedUtilities as string[];
-      const isWaterOnly = utilities.length > 0 && utilities.every((u: string) => u === "water");
       const spaceId = wizardData.space?.spaceId;
       const isPrepaidPower = spaceId === "SP0002" && utilities.includes("power");
-      if (isWaterOnly || isPrepaidPower) {
+      const isWaterOnly = utilities.length > 0 && utilities.every((u: string) => u === "water");
+      if (isPrepaidPower && !isWaterOnly) {
         setCurrentStep(3);
         return;
       }
@@ -145,9 +148,14 @@ const ConnectionWizard = () => {
           {currentStep === 3 && (
             <UtilitySelectionStep key="utility" onNext={(data) => handleNext("utility", data)} onBack={handleBack} />
           )}
-          {currentStep === 4 && (
-            <LoadCalculatorStep key="load" onNext={(data) => handleNext("load", data)} onBack={handleBack} />
-          )}
+          {currentStep === 4 && (() => {
+            const utilities = wizardData.utility?.selectedUtilities as string[] | undefined;
+            const isWaterOnly = utilities && utilities.length > 0 && utilities.every((u: string) => u === "water");
+            if (isWaterOnly) {
+              return <WaterDemandStep key="waterDemand" onNext={(data) => handleNext("waterDemand", data)} onBack={handleBack} />;
+            }
+            return <LoadCalculatorStep key="load" onNext={(data) => handleNext("load", data)} onBack={handleBack} />;
+          })()}
           {currentStep === 5 && (
             <SubmitStep key="submit" wizardData={wizardData} onBack={handleBack} onSubmit={handleSubmit} />
           )}

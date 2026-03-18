@@ -70,11 +70,6 @@ const SD_UPLOAD_ACTION: WorkflowAction = {
 
 const METER_ACTIONS: WorkflowAction[] = [
   {
-    label: "Upload Meter Purchase Proof",
-    type: "upload",
-    fields: [{ name: "meter_proof", label: "Meter Purchase Proof", type: "file" }],
-  },
-  {
     label: "Upload Calibration Certificate",
     type: "upload",
     fields: [{ name: "calibration_cert", label: "Calibration Certificate", type: "file" }],

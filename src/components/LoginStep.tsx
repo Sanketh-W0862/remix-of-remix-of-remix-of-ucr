@@ -5,6 +5,7 @@ import {
   Search, Plus, Upload, CheckCircle2, AlertCircle, Hash,
 } from "lucide-react";
 import type { UserRole } from "@/lib/roles";
+import { registerUser } from "@/lib/userRegistry";
 
 // Hardcoded mobile-to-role mapping
 const MOBILE_ROLE_MAP: Record<string, UserRole> = {

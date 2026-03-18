@@ -329,8 +329,7 @@ const LoginStep = ({ onNext }: LoginStepProps) => {
                           )}
                        </div>
                       </motion.div>
-                      );
-                    })()}
+                    )}
                   </motion.div>
                 )}
 

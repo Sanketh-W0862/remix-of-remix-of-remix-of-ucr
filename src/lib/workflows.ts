@@ -207,6 +207,7 @@ export const WORKFLOWS: Record<WorkflowType, WorkflowStage[]> = {
         },
       ],
     },
+    { id: "calibration-uploaded", label: "Calibration Certificate Uploaded", userActionRequired: false },
     { id: "slotting", label: "Schedule Site Visit (P&E)", userActionRequired: false },
     { id: "activated", label: "Water Activated", userActionRequired: false },
   ],

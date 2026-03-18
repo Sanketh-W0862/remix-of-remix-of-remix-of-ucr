@@ -11,6 +11,7 @@ import ConnectionDashboard from "./ConnectionDashboard";
 import InternalDashboard from "./InternalDashboard";
 import type { UserRole } from "@/lib/roles";
 import { ROLES } from "@/lib/roles";
+import { getRegisteredUser } from "@/lib/userRegistry";
 
 // Steps without CustomerCodeStep (removed from request flow)
 const STEPS = [

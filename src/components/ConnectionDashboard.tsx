@@ -470,7 +470,17 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
                     </div>
                   )}
 
-                   {/* Meter Recommendations for power-regular */}
+                  {/* Water Meter Note */}
+                  {actionRequired && currentStage.id === "meter-purchase" && req.utility === "Water" && (
+                    <div className="mt-3 p-3 rounded-lg bg-info/5 border border-info/10 flex items-center gap-2">
+                      <Droplets className="w-4 h-4 text-info flex-shrink-0" />
+                      <p className="text-xs text-info font-medium">
+                        Only pulse enabled (AMR Compatibility) water meters to be installed.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Meter Recommendations for power-regular */}
                   {actionRequired && currentStage.id === "customer-meter-upload" && req.workflowType === "power-regular" && (
                     <div className="mt-3">
                       <button

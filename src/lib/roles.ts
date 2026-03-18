@@ -29,8 +29,13 @@ export const STAGE_ROLE_MAP: Record<string, UserRole> = {
   // Power Temporary
   "sd-calculation": "spoc",
 
+  "meter-recommendation": "user",
+
   // Water no-meter
   "meter-purchase": "user",
+
+  // Calibration uploaded (auto-advance by P&E)
+  "calibration-uploaded": "pne",
 
   // Shared
   "slotting": "pne",

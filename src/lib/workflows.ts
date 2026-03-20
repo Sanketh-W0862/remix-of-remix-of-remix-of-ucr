@@ -93,6 +93,28 @@ const SITE_VISIT_FORM_ACTION: WorkflowAction = {
   ],
 };
 
+const WATER_SITE_VISIT_FORM_ACTION: WorkflowAction = {
+  label: "Water Site Visit Form",
+  type: "confirm",
+  fields: [
+    { name: "water_meter_serial_no", label: "Water Meter Serial Number", type: "text" },
+    { name: "initial_reading", label: "Initial Reading", type: "number" },
+    { name: "meter_make", label: "Meter Make", type: "select", options: ["Saral", "Secure", "Schneider Electric", "L&T", "Other"] },
+    { name: "meter_make_other", label: "Meter Make (Other)", type: "text", showWhen: { field: "meter_make", value: "Other" } },
+    { name: "calibration_validation", label: "Validation of Calibration Certificate", type: "select", options: ["Valid", "Invalid", "Expired"] },
+    { name: "calibration_remarks", label: "Calibration Remarks", type: "textarea" },
+    { name: "authorized_signatory", label: "Authorized Signatory (P&E)", type: "text", autoValue: "P&E Officer" },
+  ],
+};
+
+const NON_METERED_SITE_VISIT_FORM_ACTION: WorkflowAction = {
+  label: "Site Visit Form",
+  type: "confirm",
+  fields: [
+    { name: "remarks", label: "Remarks", type: "textarea" },
+  ],
+};
+
 const EXPIRY_ACTIONS: WorkflowAction[] = [
   {
     label: "Request Extension",

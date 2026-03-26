@@ -26,6 +26,7 @@ type DashFilter = "pending" | "all" | "completed";
 
 const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps) => {
   const { requests, advanceStage, rejectRequest, scheduleSiteVisit, setSdDecision } = useRequestStore();
+  const ccStore = useCcRequestStore();
   const [rejectModalId, setRejectModalId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -38,6 +39,12 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
   const [sdAmountValue, setSdAmountValue] = useState<string>("");
   const [actionModalReqId, setActionModalReqId] = useState<string | null>(null);
   const [actionModalAction, setActionModalAction] = useState<WorkflowAction | null>(null);
+
+  // CC approval state (finance only)
+  const [ccExpandedId, setCcExpandedId] = useState<string | null>(null);
+  const [ccApproveCode, setCcApproveCode] = useState<Record<string, string>>({});
+  const [ccRejectId, setCcRejectId] = useState<string | null>(null);
+  const [ccRejectReason, setCcRejectReason] = useState("");
 
   // All requests where current stage belongs to this role and not completed
   const myPendingRequests = requests.filter((r) => {

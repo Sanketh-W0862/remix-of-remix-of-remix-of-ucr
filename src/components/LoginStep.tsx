@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Phone, Building2, User, Mail, ArrowRight, Zap, Droplets,
-  Search, Plus, Upload, CheckCircle2, AlertCircle, Hash,
+  Search, Plus, Upload, CheckCircle2, AlertCircle, Hash, Clock,
 } from "lucide-react";
 import type { UserRole } from "@/lib/roles";
 import { registerUser } from "@/lib/userRegistry";
+import { submitCcRequest, getCcRequestByMobile, type CcRequest } from "@/lib/ccRequestStore";
 
 // Hardcoded mobile-to-role mapping
 const MOBILE_ROLE_MAP: Record<string, UserRole> = {
@@ -33,7 +34,6 @@ const LoginStep = ({ onNext }: LoginStepProps) => {
   // Customer code (signup only)
   const [hasCode, setHasCode] = useState<boolean | null>(null);
   const [existingCode, setExistingCode] = useState("");
-  const [verificationStatus, setVerificationStatus] = useState<"idle" | "verifying" | "verified" | "failed">("idle");
   const [customerForm, setCustomerForm] = useState({
     customerName: "", contactPersonName: "", mobile: "", emailId: "",
     gstin: "", pan: "", tan: "",
@@ -43,13 +43,30 @@ const LoginStep = ({ onNext }: LoginStepProps) => {
     gstCertificate: false, panCard: false, tanNumber: false,
   });
   const [docError, setDocError] = useState(false);
-  const handleSendOtp = () => {
-    if (mobile.length >= 10) setOtpSent(true);
-  };
 
-  const handleVerify = () => {
-    setVerificationStatus("verifying");
-    setTimeout(() => setVerificationStatus("verified"), 1500);
+  // CC request tracking
+  const [ccSubmitted, setCcSubmitted] = useState(false);
+  const [ccRequest, setCcRequest] = useState<CcRequest | null>(null);
+
+  const handleSendOtp = () => {
+    if (mobile.length >= 10) {
+      setOtpSent(true);
+      // Check for existing CC request on this mobile (for returning users)
+      const existing = getCcRequestByMobile(mobile);
+      if (existing) {
+        setCcRequest(existing);
+        setCcSubmitted(true);
+        if (existing.type === "verify") {
+          setHasCode(true);
+          setExistingCode(existing.existingCode || "");
+        } else {
+          setHasCode(false);
+          if (existing.customerForm) {
+            setCustomerForm(existing.customerForm as any);
+          }
+        }
+      }
+    }
   };
 
   const handleFieldChange = (field: string, value: string) => {
@@ -62,7 +79,7 @@ const LoginStep = ({ onNext }: LoginStepProps) => {
 
   // Auto-populate customer code form from signup details
   useEffect(() => {
-    if (hasCode === false) {
+    if (hasCode === false && !ccSubmitted) {
       setCustomerForm((prev) => ({
         ...prev,
         customerName: prev.customerName || companyName,
@@ -71,53 +88,97 @@ const LoginStep = ({ onNext }: LoginStepProps) => {
         emailId: prev.emailId || email,
       }));
     }
-  }, [hasCode, companyName, contactPerson, mobile, email]);
+  }, [hasCode, companyName, contactPerson, mobile, email, ccSubmitted]);
+
+  // Refresh CC request status on re-render
+  useEffect(() => {
+    if (ccSubmitted && mobile) {
+      const interval = setInterval(() => {
+        const latest = getCcRequestByMobile(mobile);
+        if (latest) setCcRequest(latest);
+      }, 500);
+      return () => clearInterval(interval);
+    }
+  }, [ccSubmitted, mobile]);
 
   const cleanMobile = mobile.replace(/\D/g, "").slice(-10);
   const detectedRole = MOBILE_ROLE_MAP[cleanMobile] || "user";
 
   const allDocsUploaded = uploadedDocs.gstCertificate && uploadedDocs.panCard && uploadedDocs.tanNumber;
 
-  const handleSubmit = () => {
-    if (isSignup && hasCode === false && !allDocsUploaded) {
-      setDocError(true);
-      return;
+  const handleSubmitCcRequest = () => {
+    if (hasCode === true && existingCode) {
+      // Submit verification request to finance
+      submitCcRequest({
+        type: "verify",
+        mobile,
+        existingCode,
+      });
+      setCcSubmitted(true);
+      const req = getCcRequestByMobile(mobile);
+      if (req) setCcRequest(req);
+    } else if (hasCode === false) {
+      if (!allDocsUploaded) {
+        setDocError(true);
+        return;
+      }
+      setDocError(false);
+      // Submit creation request to finance
+      submitCcRequest({
+        type: "create",
+        mobile,
+        customerForm,
+        uploadedDocs,
+      });
+      setCcSubmitted(true);
+      const req = getCcRequestByMobile(mobile);
+      if (req) setCcRequest(req);
     }
-    setDocError(false);
+  };
 
-    const code = isSignup
-      ? hasCode
-        ? existingCode
-        : customerForm.customerName
-          ? `CC-${Date.now()}`
-          : undefined
-      : undefined;
-
-    const loginPayload = {
-      mobile,
-      role: detectedRole,
-      isSignup,
-      companyName: isSignup ? companyName : undefined,
-      contactPerson: isSignup ? contactPerson : undefined,
-      email: isSignup ? email : undefined,
-      customerCode: code,
-      customerForm: isSignup && !hasCode ? customerForm : undefined,
-    };
-
-    // Persist signup details for future logins
+  const handleSubmit = () => {
+    // For signup: must have approved CC request
     if (isSignup) {
+      if (!ccRequest || ccRequest.status !== "approved") return;
+
+      const code = ccRequest.approvedCode;
+
+      const loginPayload = {
+        mobile,
+        role: detectedRole,
+        isSignup,
+        companyName: isSignup ? companyName : undefined,
+        contactPerson: isSignup ? contactPerson : undefined,
+        email: isSignup ? email : undefined,
+        customerCode: code,
+        customerForm: hasCode === false ? customerForm : undefined,
+      };
+
       registerUser({
         mobile,
         companyName,
         contactPerson,
         email,
         customerCode: code,
-        customerForm: isSignup && !hasCode ? customerForm : undefined,
+        customerForm: hasCode === false ? customerForm : undefined,
       });
+
+      onNext(loginPayload);
+      return;
     }
 
+    // Login flow (no signup)
+    const loginPayload = {
+      mobile,
+      role: detectedRole,
+      isSignup: false,
+    };
     onNext(loginPayload);
   };
+
+  const ccApproved = ccRequest?.status === "approved";
+  const ccPending = ccRequest?.status === "pending";
+  const ccRejected = ccRequest?.status === "rejected";
 
   return (
     <motion.div
@@ -247,7 +308,57 @@ const LoginStep = ({ onNext }: LoginStepProps) => {
                   >
                     <h3 className="text-sm font-semibold text-foreground">Customer Identification</h3>
 
-                    {hasCode === null && (
+                    {/* CC request already approved – show success */}
+                    {ccApproved && (
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 rounded-xl border-2 border-success bg-success/5">
+                        <div className="flex items-center gap-2 text-success mb-1">
+                          <CheckCircle2 className="w-5 h-5" />
+                          <span className="font-semibold text-sm">Customer Code Approved</span>
+                        </div>
+                        <p className="text-foreground font-mono font-bold text-lg">{ccRequest?.approvedCode}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {ccRequest?.type === "verify" ? "Your code has been verified by the finance team." : "Your customer code has been created by the finance team."}
+                        </p>
+                      </motion.div>
+                    )}
+
+                    {/* CC request pending – show waiting state */}
+                    {ccPending && (
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 rounded-xl border-2 border-warning bg-warning/5">
+                        <div className="flex items-center gap-2 text-warning mb-1">
+                          <Clock className="w-5 h-5" />
+                          <span className="font-semibold text-sm">Pending Finance Approval</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Your {ccRequest?.type === "verify" ? "verification" : "creation"} request ({ccRequest?.id}) has been submitted to the finance team. Please wait for approval or log back in later.
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-2 italic">
+                          💡 To test: Log out, log in as Finance (9000000003), approve the request, then log back in as this user.
+                        </p>
+                      </motion.div>
+                    )}
+
+                    {/* CC request rejected */}
+                    {ccRejected && (
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 rounded-xl border-2 border-destructive bg-destructive/5">
+                        <div className="flex items-center gap-2 text-destructive mb-1">
+                          <AlertCircle className="w-5 h-5" />
+                          <span className="font-semibold text-sm">Request Rejected</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Reason: {ccRequest?.rejectionReason || "No reason provided"}
+                        </p>
+                        <button
+                          onClick={() => { setCcSubmitted(false); setCcRequest(null); setHasCode(null); }}
+                          className="mt-2 text-xs text-primary font-medium hover:underline"
+                        >
+                          Try again
+                        </button>
+                      </motion.div>
+                    )}
+
+                    {/* Initial choice – not yet submitted */}
+                    {!ccSubmitted && hasCode === null && (
                       <div>
                         <p className="text-sm text-muted-foreground mb-3">Do you have a Customer Code?</p>
                         <div className="grid grid-cols-2 gap-3">
@@ -263,29 +374,23 @@ const LoginStep = ({ onNext }: LoginStepProps) => {
                       </div>
                     )}
 
-                    {hasCode === true && (
+                    {/* Verify existing code – not yet submitted */}
+                    {!ccSubmitted && hasCode === true && (
                       <div>
                         <div className="flex gap-2">
                           <input type="text" value={existingCode} onChange={(e) => setExistingCode(e.target.value)} placeholder="Enter Customer Code" className="input-glass flex-1" />
-                          <button onClick={handleVerify} className="btn-primary text-sm px-4" disabled={!existingCode}>Verify</button>
+                          <button onClick={handleSubmitCcRequest} className="btn-primary text-sm px-4" disabled={!existingCode}>
+                            Submit for Verification
+                          </button>
                         </div>
-                        {verificationStatus === "verifying" && (
-                          <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                            <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                            Verifying...
-                          </div>
-                        )}
-                        {verificationStatus === "verified" && (
-                          <div className="mt-2 flex items-center gap-1 text-xs text-success">
-                            <CheckCircle2 className="w-3 h-3" /> Verified!
-                          </div>
-                        )}
+                        <p className="text-xs text-muted-foreground mt-2">Your code will be sent to the finance team for verification.</p>
                       </div>
                     )}
 
-                    {hasCode === false && (
+                    {/* Create new code – not yet submitted */}
+                    {!ccSubmitted && hasCode === false && (
                       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
-                        <p className="text-xs text-muted-foreground">Fill in details to create your Customer Code</p>
+                        <p className="text-xs text-muted-foreground">Fill in details — Finance will review and assign your Customer Code</p>
                         <div className="grid grid-cols-2 gap-3">
                           <div><label className="text-xs font-medium text-foreground mb-1 block">Customer Name *</label><input type="text" value={customerForm.customerName} onChange={(e) => handleFieldChange("customerName", e.target.value)} className="input-glass w-full text-sm" placeholder="Company name" /></div>
                           <div><label className="text-xs font-medium text-foreground mb-1 block">Contact Person *</label><input type="text" value={customerForm.contactPersonName} onChange={(e) => handleFieldChange("contactPersonName", e.target.value)} className="input-glass w-full text-sm" placeholder="Full name" /></div>
@@ -340,7 +445,15 @@ const LoginStep = ({ onNext }: LoginStepProps) => {
                               All three documents are mandatory.
                             </div>
                           )}
-                       </div>
+                        </div>
+
+                        {/* Submit to Finance button */}
+                        <button
+                          onClick={handleSubmitCcRequest}
+                          className="btn-primary w-full text-sm mt-2"
+                        >
+                          Submit to Finance for Review
+                        </button>
                       </motion.div>
                     )}
                   </motion.div>
@@ -348,10 +461,17 @@ const LoginStep = ({ onNext }: LoginStepProps) => {
 
                 <button
                   onClick={handleSubmit}
-                  disabled={otp.length < 4 || (isSignup && hasCode === null)}
+                  disabled={
+                    otp.length < 4 ||
+                    (isSignup && !ccApproved)
+                  }
                   className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50"
                 >
-                  {isSignup ? "Create Account" : "Verify & Login"}
+                  {isSignup
+                    ? ccApproved
+                      ? "Create Account"
+                      : "Awaiting Finance Approval..."
+                    : "Verify & Login"}
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </motion.div>

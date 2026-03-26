@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap, Droplets, CheckCircle2, Clock, AlertCircle, BarChart3,
   LogOut, FileText, XCircle, MessageSquare, ChevronDown, ChevronUp, CalendarIcon,
-  Upload, ShieldCheck,
+  Upload, ShieldCheck, Hash, Search, Plus,
 } from "lucide-react";
+import { useCcRequestStore, type CcRequest } from "@/lib/ccRequestStore";
 import { format } from "date-fns";
 import type { UserRole } from "@/lib/roles";
 import { STAGE_ROLE_MAP } from "@/lib/roles";

@@ -171,6 +171,167 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
           ))}
         </div>
 
+        {/* Customer Code Requests - Finance Only */}
+        {role === "finance" && ccStore.pendingRequests.length > 0 && (
+          <div className="glass-card p-6 mb-6">
+            <h2 className="text-xl font-bold font-display text-foreground mb-4 flex items-center gap-2">
+              <Hash className="w-5 h-5 text-primary" />
+              Customer Code Requests
+              <span className="ml-2 text-sm font-normal text-muted-foreground">({ccStore.pendingRequests.length} pending)</span>
+            </h2>
+            <div className="space-y-4">
+              {ccStore.pendingRequests.map((ccReq) => {
+                const isExpCC = ccExpandedId === ccReq.id;
+                return (
+                  <motion.div
+                    key={ccReq.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-5 rounded-xl border border-accent/30 bg-accent/[0.03]"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${ccReq.type === "verify" ? "bg-info/10" : "bg-primary/10"}`}>
+                          {ccReq.type === "verify" ? <Search className="w-5 h-5 text-info" /> : <Plus className="w-5 h-5 text-primary" />}
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-foreground">{ccReq.id}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {ccReq.type === "verify" ? "Code Verification" : "New Code Creation"} • Mobile: {ccReq.mobile}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="status-badge bg-warning/10 text-warning">Pending</div>
+                    </div>
+
+                    {/* Existing code for verification */}
+                    {ccReq.type === "verify" && ccReq.existingCode && (
+                      <div className="mb-3 p-3 rounded-lg bg-muted/30 border border-border/50">
+                        <span className="text-xs text-muted-foreground">Code to Verify:</span>
+                        <span className="ml-2 font-mono font-bold text-foreground text-lg">{ccReq.existingCode}</span>
+                      </div>
+                    )}
+
+                    {/* Expandable details for creation requests */}
+                    {ccReq.type === "create" && (
+                      <>
+                        <button
+                          onClick={() => setCcExpandedId(isExpCC ? null : ccReq.id)}
+                          className="text-xs text-primary flex items-center gap-1 mb-3"
+                        >
+                          {isExpCC ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                          {isExpCC ? "Hide Details" : "View Customer Details"}
+                        </button>
+
+                        <AnimatePresence>
+                          {isExpCC && ccReq.customerForm && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: "auto" }}
+                              exit={{ opacity: 0, height: 0 }}
+                              className="mb-4 p-3 rounded-lg bg-muted/30 border border-border/50"
+                            >
+                              <div className="grid grid-cols-2 gap-3 text-sm">
+                                <div className="col-span-2 mb-1">
+                                  <span className="text-xs font-semibold text-primary uppercase tracking-wider">Customer Details</span>
+                                </div>
+                                {Object.entries(ccReq.customerForm).filter(([, v]) => v).map(([key, value]) => (
+                                  <div key={key}>
+                                    <span className="text-muted-foreground capitalize">{key.replace(/([A-Z])/g, " $1").trim()}:</span>
+                                    <span className="ml-2 text-foreground">{value}</span>
+                                  </div>
+                                ))}
+
+                                {/* Documents */}
+                                {ccReq.uploadedDocs && (
+                                  <>
+                                    <div className="col-span-2 border-t border-border/50 my-1" />
+                                    <div className="col-span-2 mb-1">
+                                      <span className="text-xs font-semibold text-primary uppercase tracking-wider">Documents</span>
+                                    </div>
+                                    <div className="col-span-2 flex flex-wrap gap-2">
+                                      {Object.entries(ccReq.uploadedDocs).map(([doc, uploaded]) => (
+                                        <span key={doc} className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-md ${uploaded ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
+                                          {uploaded ? <CheckCircle2 className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
+                                          {doc.replace(/([A-Z])/g, " $1").trim()}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </>
+                    )}
+
+                    {/* Approve with code entry */}
+                    <div className="flex gap-2 pt-3 border-t border-border/50">
+                      <div className="flex-1 flex gap-2">
+                        <input
+                          type="text"
+                          value={ccApproveCode[ccReq.id] || (ccReq.type === "verify" ? ccReq.existingCode || "" : "")}
+                          onChange={(e) => setCcApproveCode((prev) => ({ ...prev, [ccReq.id]: e.target.value }))}
+                          placeholder={ccReq.type === "verify" ? "Confirm code" : "Enter new Customer Code"}
+                          className="input-glass flex-1 text-sm"
+                        />
+                        <button
+                          onClick={() => {
+                            const code = ccApproveCode[ccReq.id] || (ccReq.type === "verify" ? ccReq.existingCode : "");
+                            if (code) {
+                              ccStore.approve(ccReq.id, code);
+                              setCcApproveCode((prev) => { const n = { ...prev }; delete n[ccReq.id]; return n; });
+                            }
+                          }}
+                          disabled={!(ccApproveCode[ccReq.id] || (ccReq.type === "verify" ? ccReq.existingCode : ""))}
+                          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold bg-success/10 text-success hover:bg-success/20 transition-all disabled:opacity-50"
+                        >
+                          <CheckCircle2 className="w-4 h-4" /> Approve
+                        </button>
+                      </div>
+                      <button
+                        onClick={() => { setCcRejectId(ccReq.id); setCcRejectReason(""); }}
+                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold bg-destructive/10 text-destructive hover:bg-destructive/20 transition-all"
+                      >
+                        <XCircle className="w-4 h-4" /> Reject
+                      </button>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* CC Reject Modal */}
+        <AnimatePresence>
+          {ccRejectId && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div className="absolute inset-0 bg-foreground/40 backdrop-blur-sm" onClick={() => setCcRejectId(null)} />
+              <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative z-10 w-full max-w-md glass-card-elevated p-6">
+                <h3 className="text-lg font-bold font-display text-foreground mb-4">Reject CC Request</h3>
+                <textarea
+                  className="input-glass w-full min-h-[80px] resize-none"
+                  placeholder="Reason for rejection..."
+                  value={ccRejectReason}
+                  onChange={(e) => setCcRejectReason(e.target.value)}
+                />
+                <div className="flex gap-3 mt-4">
+                  <button onClick={() => setCcRejectId(null)} className="btn-secondary flex-1">Cancel</button>
+                  <button
+                    onClick={() => { if (ccRejectId && ccRejectReason.trim()) { ccStore.reject(ccRejectId, ccRejectReason.trim()); setCcRejectId(null); } }}
+                    disabled={!ccRejectReason.trim()}
+                    className="flex-1 gradient-bg text-primary-foreground px-6 py-3 rounded-xl font-semibold transition-all hover:opacity-90 disabled:opacity-50"
+                  >
+                    Reject
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Request List */}
         <div className="glass-card p-6">
           <h2 className="text-xl font-bold font-display text-foreground mb-6 capitalize">{dashFilter === "all" ? "All" : dashFilter} Requests</h2>

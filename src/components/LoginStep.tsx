@@ -384,6 +384,9 @@ const LoginStep = ({ onNext }: LoginStepProps) => {
                           </button>
                         </div>
                         <p className="text-xs text-muted-foreground mt-2">Your code will be sent to the finance team for verification.</p>
+                        <button onClick={() => { setHasCode(null); setExistingCode(""); }} className="mt-2 text-xs text-primary font-medium hover:underline">
+                          ← Back to choose again
+                        </button>
                       </div>
                     )}
 

@@ -1,22 +1,22 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Upload, CheckCircle2, MapPin, Hash, ChevronDown } from "lucide-react";
-import { getSpaceMeter } from "@/lib/workflows";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, ArrowRight, Upload, CheckCircle2, MapPin, Plus, Home } from "lucide-react";
+import { getSavedAddresses, addSavedAddress, type SavedAddress } from "@/lib/addressStore";
 
 interface SpaceDocumentStepProps {
   onNext: (data: any) => void;
   onBack: () => void;
 }
 
-const SPACE_OPTIONS = ["SP0001", "SP0002", "SP0003"];
-
 const SpaceDocumentStep = ({ onNext, onBack }: SpaceDocumentStepProps) => {
-  const [spaceMethod, setSpaceMethod] = useState<"id" | "manual">("id");
-  const [spaceId, setSpaceId] = useState("");
-  const [address, setAddress] = useState({ line1: "", line2: "", city: "", state: "", pin: "" });
+  const [address, setAddress] = useState("");
+  const [addressLabel, setAddressLabel] = useState("");
+  const [selectedSavedId, setSelectedSavedId] = useState<string | null>(null);
   const [documents, setDocuments] = useState({
     noc: false, loi: false, agreement: false, poa: false,
   });
+
+  const savedAddresses = getSavedAddresses();
 
   const requiredDocs = [
     { key: "noc", label: "NOC", desc: "No Objection Certificate" },
@@ -26,13 +26,31 @@ const SpaceDocumentStep = ({ onNext, onBack }: SpaceDocumentStepProps) => {
   ];
 
   const completedCount = Object.values(documents).filter(Boolean).length;
-  const selectedSpaceConfig = spaceId ? getSpaceMeter(spaceId) : undefined;
+
+  const handleSelectSaved = (saved: SavedAddress) => {
+    setSelectedSavedId(saved.id);
+    setAddress(saved.address);
+    setAddressLabel(saved.label);
+  };
+
+  const handleContinue = () => {
+    let addrEntry: SavedAddress;
+    if (selectedSavedId) {
+      addrEntry = savedAddresses.find((a) => a.id === selectedSavedId)!;
+    } else {
+      // Save new address
+      addrEntry = addSavedAddress(address, addressLabel || undefined);
+    }
+    onNext({ addressId: addrEntry.id, address: addrEntry.address, addressLabel: addrEntry.label, documents });
+  };
+
+  const isValid = address.trim().length > 0;
 
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="max-w-3xl mx-auto">
       <div className="mb-8">
-        <h2 className="text-2xl font-bold font-display text-foreground">Space & Documents</h2>
-        <p className="text-muted-foreground mt-1">Identify your space and upload mandatory documents</p>
+        <h2 className="text-2xl font-bold font-display text-foreground">Address & Documents</h2>
+        <p className="text-muted-foreground mt-1">Enter your connection address and upload mandatory documents</p>
       </div>
 
       {/* Document Checklist */}
@@ -72,63 +90,86 @@ const SpaceDocumentStep = ({ onNext, onBack }: SpaceDocumentStepProps) => {
         </div>
       </div>
 
-      {/* Space Selection */}
+      {/* Address Section */}
       <div className="glass-card p-6">
-        <h3 className="text-lg font-semibold text-foreground mb-4">Space Identification</h3>
-        <div className="flex gap-2 mb-4 p-1 bg-muted rounded-xl">
-          <button onClick={() => setSpaceMethod("id")} className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${spaceMethod === "id" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>
-            <Hash className="w-4 h-4" /> Space ID
-          </button>
-          <button onClick={() => setSpaceMethod("manual")} className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${spaceMethod === "manual" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>
-            <MapPin className="w-4 h-4" /> Manual Address
-          </button>
-        </div>
+        <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+          <MapPin className="w-5 h-5 text-primary" /> Connection Address
+        </h3>
 
-        {spaceMethod === "id" ? (
-          <div className="space-y-3">
-            <div className="relative">
-              <select
-                value={spaceId}
-                onChange={(e) => setSpaceId(e.target.value)}
-                className="input-glass w-full appearance-none pr-10"
-              >
-                <option value="">Select Space ID</option>
-                {SPACE_OPTIONS.map((id) => (
-                  <option key={id} value={id}>{id}</option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+        {/* Saved Addresses */}
+        {savedAddresses.length > 0 && (
+          <div className="mb-5">
+            <p className="text-sm text-muted-foreground mb-3">Select a saved address or add a new one</p>
+            <div className="space-y-2 mb-4">
+              {savedAddresses.map((saved) => (
+                <button
+                  key={saved.id}
+                  onClick={() => handleSelectSaved(saved)}
+                  className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
+                    selectedSavedId === saved.id
+                      ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                      : "border-border hover:border-primary/30"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+                      selectedSavedId === saved.id ? "bg-primary/10" : "bg-muted"
+                    }`}>
+                      <Home className="w-4 h-4 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-sm text-foreground">{saved.label}</span>
+                        <span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{saved.id}</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground truncate">{saved.address}</p>
+                    </div>
+                    {selectedSavedId === saved.id && <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />}
+                  </div>
+                </button>
+              ))}
             </div>
-
-            {spaceId && (
-              <div className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
-                {selectedSpaceConfig ? (
-                  <>
-                    Space <span className="font-semibold text-foreground">{spaceId}</span> is configured as{" "}
-                    <span className="font-semibold text-foreground">{selectedSpaceConfig.label}</span>.
-                  </>
-                ) : (
-                  <>
-                    Space <span className="font-semibold text-foreground">{spaceId}</span> is selected.
-                  </>
-                )}
-              </div>
-            )}
+            <button
+              onClick={() => { setSelectedSavedId(null); setAddress(""); setAddressLabel(""); }}
+              className={`inline-flex items-center gap-1.5 text-sm font-medium transition-colors ${
+                !selectedSavedId ? "text-primary" : "text-muted-foreground hover:text-primary"
+              }`}
+            >
+              <Plus className="w-4 h-4" /> Add new address
+            </button>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="md:col-span-2"><input type="text" value={address.line1} onChange={(e) => setAddress({ ...address, line1: e.target.value })} placeholder="Address Line 1" className="input-glass w-full" /></div>
-            <div className="md:col-span-2"><input type="text" value={address.line2} onChange={(e) => setAddress({ ...address, line2: e.target.value })} placeholder="Address Line 2" className="input-glass w-full" /></div>
-            <input type="text" value={address.city} onChange={(e) => setAddress({ ...address, city: e.target.value })} placeholder="City" className="input-glass w-full" />
-            <input type="text" value={address.state} onChange={(e) => setAddress({ ...address, state: e.target.value })} placeholder="State" className="input-glass w-full" />
-            <input type="text" value={address.pin} onChange={(e) => setAddress({ ...address, pin: e.target.value })} placeholder="PIN Code" className="input-glass w-full" maxLength={6} />
+        )}
+
+        {/* New Address Input */}
+        {(!selectedSavedId || savedAddresses.length === 0) && (
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1.5 block">Address Label (optional)</label>
+              <input
+                type="text"
+                value={addressLabel}
+                onChange={(e) => setAddressLabel(e.target.value)}
+                placeholder="e.g. Head Office, Warehouse B, Shop 42"
+                className="input-glass w-full"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1.5 block">Full Address *</label>
+              <textarea
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="Enter the complete address for the connection..."
+                className="input-glass w-full min-h-[100px] resize-none"
+                rows={3}
+              />
+            </div>
           </div>
         )}
       </div>
 
       <div className="flex justify-between mt-8">
         <button onClick={onBack} className="btn-secondary flex items-center gap-2"><ArrowLeft className="w-4 h-4" /> Back</button>
-        <button onClick={() => onNext({ spaceMethod, spaceId, address, documents })} className="btn-primary flex items-center gap-2">Continue <ArrowRight className="w-4 h-4" /></button>
+        <button onClick={handleContinue} disabled={!isValid} className="btn-primary flex items-center gap-2 disabled:opacity-50">Continue <ArrowRight className="w-4 h-4" /></button>
       </div>
     </motion.div>
   );

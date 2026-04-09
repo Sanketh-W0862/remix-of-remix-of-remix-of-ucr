@@ -189,7 +189,7 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {req.utility} • {req.type} • {req.space}
+                          {req.utility} • {req.type} • {req.addressId}
                         </p>
                       </div>
                     </div>
@@ -275,8 +275,8 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
                             <span className="ml-2 text-foreground">{getWorkflowLabel(req.workflowType)}</span>
                           </div>
                           <div>
-                            <span className="text-muted-foreground">Space ID:</span>
-                            <span className="ml-2 text-foreground">{req.space}</span>
+                            <span className="text-muted-foreground">Address:</span>
+                            <span className="ml-2 text-foreground">{req.address} ({req.addressId})</span>
                           </div>
                           <div>
                             <span className="text-muted-foreground">Current Stage:</span>

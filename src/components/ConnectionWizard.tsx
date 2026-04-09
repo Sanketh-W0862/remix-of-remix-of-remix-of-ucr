@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AnimatePresence } from "framer-motion";
-import { LogIn, FolderOpen, Zap, Calculator, Send, Droplets } from "lucide-react";
+import { LogIn, FolderOpen, Zap, Calculator, Send } from "lucide-react";
 import StepperHeader from "./StepperHeader";
 import LoginStep from "./LoginStep";
 import SpaceDocumentStep from "./SpaceDocumentStep";
@@ -14,10 +14,9 @@ import type { UserRole } from "@/lib/roles";
 import { ROLES } from "@/lib/roles";
 import { getRegisteredUser } from "@/lib/userRegistry";
 
-// Steps without CustomerCodeStep (removed from request flow)
 const STEPS = [
   { id: 1, title: "Login", icon: <LogIn className="w-4 h-4" /> },
-  { id: 2, title: "Space & Docs", icon: <FolderOpen className="w-4 h-4" /> },
+  { id: 2, title: "Address & Docs", icon: <FolderOpen className="w-4 h-4" /> },
   { id: 3, title: "Utilities", icon: <Zap className="w-4 h-4" /> },
   { id: 4, title: "Demand", icon: <Calculator className="w-4 h-4" /> },
   { id: 5, title: "Submit", icon: <Send className="w-4 h-4" /> },
@@ -34,7 +33,6 @@ const ConnectionWizard = () => {
       const role = data.role as UserRole;
       setUserRole(role);
 
-      // On login (not signup), look up stored user details and merge them
       if (!data.isSignup) {
         const stored = getRegisteredUser(data.mobile);
         if (stored) {
@@ -49,14 +47,12 @@ const ConnectionWizard = () => {
         }
       }
 
-      // Internal roles go straight to their dashboard
       if (role !== "user") {
         setShowDashboard(true);
         setWizardData((prev) => ({ ...prev, [stepKey]: data }));
         return;
       }
 
-      // For returning users (login, not signup), go directly to dashboard
       if (!data.isSignup) {
         setShowDashboard(true);
         setWizardData((prev) => ({ ...prev, [stepKey]: data }));
@@ -67,13 +63,14 @@ const ConnectionWizard = () => {
     const updatedData = { ...wizardData, [stepKey]: data };
     setWizardData(updatedData);
 
-    // Skip Load step for prepaid/non-metered power (SP0002)
+    // After utility step: decide whether to show load/demand step or skip to submit
     if (stepKey === "utility") {
       const utilities = data.selectedUtilities as string[];
-      const spaceId = updatedData.space?.spaceId;
-      const isPrepaidPower = spaceId === "SP0002" && utilities.includes("power");
+      const powerType = data.powerType;
       const isWaterOnly = utilities.length > 0 && utilities.every((u: string) => u === "water");
-      // Water-only goes to water demand (step 4), prepaid power skips to submit
+      const isPrepaidPower = utilities.includes("power") && powerType === "prepaid";
+
+      // Prepaid power (non-metered) skips load calculator
       if (isPrepaidPower && !isWaterOnly) {
         setCurrentStep(5); // Skip to Submit
         return;
@@ -88,9 +85,9 @@ const ConnectionWizard = () => {
     // If on Submit (step 5) and load/demand was skipped, go back to Utilities (step 3)
     if (currentStep === 5 && wizardData.utility) {
       const utilities = wizardData.utility.selectedUtilities as string[];
-      const spaceId = wizardData.space?.spaceId;
-      const isPrepaidPower = spaceId === "SP0002" && utilities.includes("power");
+      const powerType = wizardData.utility.powerType;
       const isWaterOnly = utilities.length > 0 && utilities.every((u: string) => u === "water");
+      const isPrepaidPower = utilities.includes("power") && powerType === "prepaid";
       if (isPrepaidPower && !isWaterOnly) {
         setCurrentStep(3);
         return;
@@ -102,7 +99,6 @@ const ConnectionWizard = () => {
   const handleSubmit = () => setShowDashboard(true);
 
   const handleNewRequest = () => {
-    // Start at step 2 (Space & Docs), skip login
     setCurrentStep(2);
     setShowDashboard(false);
   };
@@ -114,13 +110,11 @@ const ConnectionWizard = () => {
     setUserRole(null);
   };
 
-  // Internal team dashboards
   if (showDashboard && userRole && userRole !== "user") {
     const roleInfo = ROLES.find((r) => r.id === userRole)!;
     return <InternalDashboard role={userRole} roleLabel={roleInfo.label} onLogout={handleLogout} />;
   }
 
-  // User dashboard
   if (showDashboard) {
     return (
       <div className="min-h-screen bg-background p-4 md:p-8">

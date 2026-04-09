@@ -3,14 +3,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap, Droplets, CheckCircle2, Clock, AlertCircle, BarChart3,
   LogOut, FileText, XCircle, MessageSquare, ChevronDown, ChevronUp, CalendarIcon,
-  Upload, ShieldCheck, Hash, Search, Plus,
+  Upload, ShieldCheck, Hash, Search, Plus, Pencil,
 } from "lucide-react";
 import { useCcRequestStore, type CcRequest } from "@/lib/ccRequestStore";
 import { format } from "date-fns";
 import type { UserRole } from "@/lib/roles";
 import { STAGE_ROLE_MAP } from "@/lib/roles";
 import { useRequestStore, type ConnectionRequest, type SdDecision } from "@/lib/requestStore";
-import { getWorkflowStages, getCurrentStage, getTimelineLabels, getWorkflowLabel } from "@/lib/workflows";
+import { getWorkflowStages, getCurrentStage, getTimelineLabels, getWorkflowLabel, CONNECTION_TYPE_OPTIONS } from "@/lib/workflows";
+import type { WorkflowType } from "@/lib/workflows";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -25,7 +26,7 @@ interface InternalDashboardProps {
 type DashFilter = "pending" | "all" | "completed";
 
 const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps) => {
-  const { requests, advanceStage, rejectRequest, scheduleSiteVisit, setSdDecision } = useRequestStore();
+  const { requests, advanceStage, rejectRequest, scheduleSiteVisit, setSdDecision, updateConnectionType } = useRequestStore();
   const ccStore = useCcRequestStore();
   const [rejectModalId, setRejectModalId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
@@ -39,6 +40,10 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
   const [sdAmountValue, setSdAmountValue] = useState<string>("");
   const [actionModalReqId, setActionModalReqId] = useState<string | null>(null);
   const [actionModalAction, setActionModalAction] = useState<WorkflowAction | null>(null);
+
+  // SPOC connection type editing
+  const [editTypeReqId, setEditTypeReqId] = useState<string | null>(null);
+  const [editTypeValue, setEditTypeValue] = useState<WorkflowType | "">("");
 
   // CC approval state (finance only)
   const [ccExpandedId, setCcExpandedId] = useState<string | null>(null);
@@ -374,7 +379,7 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
                         <div>
                           <h3 className="font-semibold text-foreground">{req.id}</h3>
                           <p className="text-sm text-muted-foreground">
-                            {req.utility} • {req.type} • {req.space}
+                            {req.utility} • {req.type} • {req.addressId}
                           </p>
                         </div>
                       </div>
@@ -448,9 +453,9 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
                               <span className="text-muted-foreground">Workflow:</span>
                               <span className="ml-2 text-foreground">{getWorkflowLabel(req.workflowType)}</span>
                             </div>
-                            <div>
-                              <span className="text-muted-foreground">Space ID:</span>
-                              <span className="ml-2 text-foreground">{req.space}</span>
+                            <div className="col-span-2">
+                              <span className="text-muted-foreground">Address:</span>
+                              <span className="ml-2 text-foreground">{req.address} ({req.addressId})</span>
                             </div>
                             <div>
                               <span className="text-muted-foreground">Current Stage:</span>
@@ -660,6 +665,16 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
                     {/* Action Buttons - only for pending requests assigned to this role */}
                     {isMine && (
                       <div className="flex gap-2 pt-3 border-t border-border/50">
+                        {/* SPOC: Edit Connection Type button */}
+                        {role === "spoc" && currentStage.id === "spoc-approval" && (
+                          <button
+                            onClick={() => { setEditTypeReqId(req.id); setEditTypeValue(req.workflowType); }}
+                            className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold bg-warning/10 text-warning hover:bg-warning/20 transition-all active:scale-[0.97]"
+                            title="Edit Connection Type"
+                          >
+                            <Pencil className="w-4 h-4" /> Edit Type
+                          </button>
+                        )}
                         <button
                           onClick={() => handleApprove(req.id)}
                           className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold bg-success/10 text-success hover:bg-success/20 transition-all active:scale-[0.97]"
@@ -917,6 +932,75 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
           action={actionModalAction}
         />
       )}
+
+      {/* Edit Connection Type Modal (SPOC only) */}
+      <AnimatePresence>
+        {editTypeReqId && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          >
+            <div className="absolute inset-0 bg-foreground/40 backdrop-blur-sm" onClick={() => setEditTypeReqId(null)} />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative z-10 w-full max-w-md glass-card-elevated p-6"
+            >
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center">
+                  <Pencil className="w-5 h-5 text-warning" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold font-display text-foreground">Edit Connection Type</h3>
+                  <p className="text-sm text-muted-foreground">{editTypeReqId}</p>
+                </div>
+              </div>
+
+              <p className="text-sm text-muted-foreground mb-4">Change the connection type for this request. The workflow will be updated accordingly.</p>
+
+              <div className="space-y-2">
+                {CONNECTION_TYPE_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setEditTypeValue(opt.value)}
+                    className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
+                      editTypeValue === opt.value
+                        ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                        : "border-border hover:border-primary/20"
+                    }`}
+                  >
+                    <p className="font-semibold text-sm text-foreground">{opt.label}</p>
+                    <p className="text-xs text-muted-foreground">{opt.utility}</p>
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button onClick={() => setEditTypeReqId(null)} className="btn-secondary flex-1">Cancel</button>
+                <button
+                  onClick={() => {
+                    if (editTypeReqId && editTypeValue) {
+                      const opt = CONNECTION_TYPE_OPTIONS.find((o) => o.value === editTypeValue);
+                      if (opt) {
+                        updateConnectionType(editTypeReqId, editTypeValue as WorkflowType, opt.label.split(" – ")[1] || opt.label);
+                      }
+                      setEditTypeReqId(null);
+                      setEditTypeValue("");
+                    }
+                  }}
+                  disabled={!editTypeValue}
+                  className="flex-1 gradient-bg text-primary-foreground px-6 py-3 rounded-xl font-semibold transition-all hover:opacity-90 disabled:opacity-50"
+                >
+                  Update Type
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

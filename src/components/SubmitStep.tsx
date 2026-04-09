@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, CheckCircle2, Send, Zap, FileText, MapPin, Calculator } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Send, Zap, FileText, MapPin, Calculator, Droplets } from "lucide-react";
 import { addRequest, type RequestUserDetails, type LoadData, type LoadAppliance, type WaterDemandData } from "@/lib/requestStore";
 import { resolveWorkflowType } from "@/lib/workflows";
 import type { WorkflowType } from "@/lib/workflows";
@@ -14,24 +14,20 @@ interface SubmitStepProps {
 const SubmitStep = ({ wizardData, onBack, onSubmit }: SubmitStepProps) => {
   const [submitted, setSubmitted] = useState(false);
 
-  const spaceId = wizardData.space?.spaceId || "SP0001";
+  const addressId = wizardData.space?.addressId || "ADDR-0000";
+  const address = wizardData.space?.address || "Not provided";
   const utilities: string[] = wizardData.utility?.selectedUtilities || [];
-  const powerType = wizardData.utility?.powerType || "regular";
+  const powerType = wizardData.utility?.powerType || "postpaid";
+  const waterType = wizardData.utility?.waterType || "existing";
 
   const resolvedWorkflows: { utility: string; wfType: WorkflowType }[] = [];
   for (const util of utilities) {
     if (util === "power") {
-      const wfType = resolveWorkflowType(spaceId, "power", powerType);
-      resolvedWorkflows.push({
-        utility: "Power",
-        wfType,
-      });
+      const wfType = resolveWorkflowType("power", powerType);
+      resolvedWorkflows.push({ utility: "Power", wfType });
     } else if (util === "water") {
-      const wfType = resolveWorkflowType(spaceId, "water");
-      resolvedWorkflows.push({
-        utility: "Water",
-        wfType,
-      });
+      const wfType = resolveWorkflowType("water", waterType);
+      resolvedWorkflows.push({ utility: "Water", wfType });
     }
   }
 
@@ -45,13 +41,10 @@ const SubmitStep = ({ wizardData, onBack, onSubmit }: SubmitStepProps) => {
       email: loginData.email || loginData.customerForm?.emailId || undefined,
     };
 
-    // Build load data from wizard
     let loadData: LoadData | undefined;
     if (wizardData.load) {
       const ld = wizardData.load;
       const appliances: LoadAppliance[] = [];
-
-      // Default appliances with qty > 0
       if (ld.quantities && ld.kwValues) {
         for (const [name, qty] of Object.entries(ld.quantities)) {
           if ((qty as number) > 0) {
@@ -59,16 +52,11 @@ const SubmitStep = ({ wizardData, onBack, onSubmit }: SubmitStepProps) => {
           }
         }
       }
-
-      // Custom appliances
       if (ld.customAppliances) {
         for (const ca of ld.customAppliances) {
-          if (ca.qty > 0) {
-            appliances.push({ name: ca.name, kw: ca.kw, qty: ca.qty });
-          }
+          if (ca.qty > 0) appliances.push({ name: ca.name, kw: ca.kw, qty: ca.qty });
         }
       }
-
       loadData = {
         method: ld.method || "calculator",
         totalKW: ld.totalKW || 0,
@@ -78,16 +66,10 @@ const SubmitStep = ({ wizardData, onBack, onSubmit }: SubmitStepProps) => {
       };
     }
 
-    // Build water demand data
     let waterDemand: WaterDemandData | undefined;
     if (wizardData.waterDemand) {
       const wd = wizardData.waterDemand;
-      waterDemand = {
-        domesticKL: wd.domesticKL || 0,
-        flushingKL: wd.flushingKL || 0,
-        roKL: wd.roKL || 0,
-        totalKL: wd.totalKL || 0,
-      };
+      waterDemand = { domesticKL: wd.domesticKL || 0, flushingKL: wd.flushingKL || 0, roKL: wd.roKL || 0, totalKL: wd.totalKL || 0 };
     }
 
     for (const rw of resolvedWorkflows) {
@@ -102,7 +84,8 @@ const SubmitStep = ({ wizardData, onBack, onSubmit }: SubmitStepProps) => {
         utility: rw.utility,
         type: typeLabel,
         workflowType: rw.wfType,
-        space: spaceId,
+        address,
+        addressId,
         expiry: rw.wfType === "power-temporary" ? wizardData.utility?.tempDates?.to : undefined,
         userDetails,
         loadData: rw.utility === "Power" ? loadData : undefined,
@@ -133,9 +116,10 @@ const SubmitStep = ({ wizardData, onBack, onSubmit }: SubmitStepProps) => {
 
   const summaryItems = [
     { icon: <Zap className="w-5 h-5" />, label: "Utilities", value: utilities.join(", ") || "—", color: "text-primary" },
-    { icon: <MapPin className="w-5 h-5" />, label: "Space", value: spaceId, color: "text-info" },
+    { icon: <MapPin className="w-5 h-5" />, label: "Address", value: `${address} (${addressId})`, color: "text-info" },
     { icon: <FileText className="w-5 h-5" />, label: "Documents", value: `${Object.values(wizardData.space?.documents || {}).filter(Boolean).length}/4 uploaded`, color: "text-success" },
-    { icon: <Calculator className="w-5 h-5" />, label: "Load", value: wizardData.load?.totalKW ? `${wizardData.load.totalKW.toFixed(2)} kW` : "Document uploaded", color: "text-accent" },
+    ...(wizardData.load?.totalKW ? [{ icon: <Calculator className="w-5 h-5" />, label: "Load", value: `${wizardData.load.totalKW.toFixed(2)} kW`, color: "text-accent" }] : []),
+    ...(wizardData.waterDemand?.totalKL ? [{ icon: <Droplets className="w-5 h-5" />, label: "Water Demand", value: `${wizardData.waterDemand.totalKL.toFixed(1)} KL/day`, color: "text-info" }] : []),
   ];
 
   return (
@@ -167,7 +151,6 @@ const SubmitStep = ({ wizardData, onBack, onSubmit }: SubmitStepProps) => {
           ))}
         </div>
       </div>
-
 
       {wizardData.utility?.powerType === "temporary" && (
         <div className="glass-card p-6 mb-6 border-accent/20">

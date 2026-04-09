@@ -38,7 +38,8 @@ export interface ConnectionRequest {
   utility: string;
   type: string;
   workflowType: WorkflowType;
-  space: string;
+  address: string;
+  addressId: string;
   stageIndex: number;
   date: string;
   expiry?: string;
@@ -55,20 +56,19 @@ export interface ConnectionRequest {
 }
 
 export const INITIAL_REQUESTS: ConnectionRequest[] = [
-  { id: "REQ-2024-001", utility: "Power", type: "Postpaid", workflowType: "power-regular", space: "SP0004", stageIndex: 8, date: "2024-01-15" },
-  { id: "REQ-2024-002", utility: "Water", type: "Existing Meter", workflowType: "water-existing-meter", space: "SP0001", stageIndex: 3, date: "2024-02-20" },
-  { id: "REQ-2024-003", utility: "Power", type: "Temporary", workflowType: "power-temporary", space: "SP0003", stageIndex: 2, date: "2024-03-01", expiry: "2024-06-01" },
-  { id: "REQ-2024-004", utility: "Power", type: "Postpaid", workflowType: "power-regular", space: "SP0004", stageIndex: 5, date: "2024-03-10" },
-  { id: "REQ-2024-005", utility: "Power", type: "Temporary", workflowType: "power-temporary", space: "SP0005", stageIndex: 7, date: "2024-01-05", expiry: "2024-04-05" },
-  { id: "REQ-2024-006", utility: "Water", type: "New Meter", workflowType: "water-no-meter", space: "SP0005", stageIndex: 2, date: "2024-03-15" },
-  { id: "REQ-2024-007", utility: "Power", type: "Prepaid", workflowType: "power-prepaid", space: "SP0002", stageIndex: 1, date: "2024-03-18" },
-  { id: "REQ-2024-008", utility: "Power", type: "Prepaid", workflowType: "power-prepaid", space: "SP0002", stageIndex: 3, date: "2024-03-12" },
+  { id: "REQ-2024-001", utility: "Power", type: "Postpaid", workflowType: "power-regular", address: "Tower A, Block 4, Cyber City", addressId: "ADDR-S001", stageIndex: 8, date: "2024-01-15" },
+  { id: "REQ-2024-002", utility: "Water", type: "Existing Meter", workflowType: "water-existing-meter", address: "Unit 12, Trade Centre", addressId: "ADDR-S002", stageIndex: 3, date: "2024-02-20" },
+  { id: "REQ-2024-003", utility: "Power", type: "Temporary", workflowType: "power-temporary", address: "Plot 7, Industrial Area", addressId: "ADDR-S003", stageIndex: 2, date: "2024-03-01", expiry: "2024-06-01" },
+  { id: "REQ-2024-004", utility: "Power", type: "Postpaid", workflowType: "power-regular", address: "Tower A, Block 4, Cyber City", addressId: "ADDR-S001", stageIndex: 5, date: "2024-03-10" },
+  { id: "REQ-2024-005", utility: "Power", type: "Temporary", workflowType: "power-temporary", address: "Warehouse 5, Sector 18", addressId: "ADDR-S004", stageIndex: 7, date: "2024-01-05", expiry: "2024-04-05" },
+  { id: "REQ-2024-006", utility: "Water", type: "New Meter", workflowType: "water-no-meter", address: "Warehouse 5, Sector 18", addressId: "ADDR-S004", stageIndex: 2, date: "2024-03-15" },
+  { id: "REQ-2024-007", utility: "Power", type: "Prepaid", workflowType: "power-prepaid", address: "Shop 3, Market Complex", addressId: "ADDR-S005", stageIndex: 1, date: "2024-03-18" },
+  { id: "REQ-2024-008", utility: "Power", type: "Prepaid", workflowType: "power-prepaid", address: "Shop 3, Market Complex", addressId: "ADDR-S005", stageIndex: 3, date: "2024-03-12" },
 ];
 
-// Simple shared-state store
 let globalRequests: ConnectionRequest[] = [...INITIAL_REQUESTS];
 let listeners: Array<() => void> = [];
-let nextId = 8;
+let nextId = 9;
 
 function notify() {
   listeners.forEach((l) => l());
@@ -170,13 +170,29 @@ export function useRequestStore() {
         return updated;
       }
 
-      // collected / waived: skip SD payment + finance and route directly to customer meter upload
       const customerMeterIndex = findStageIndex("customer-meter-upload");
       updated.stageIndex = customerMeterIndex >= 0
         ? customerMeterIndex
         : Math.min(r.stageIndex + 1, stages.length - 1);
 
       return updated;
+    });
+    notify();
+  }, []);
+
+  /** SPOC can change the connection type / workflow of a request */
+  const updateConnectionType = useCallback((requestId: string, newWorkflowType: WorkflowType, newType: string) => {
+    globalRequests = globalRequests.map((r) => {
+      if (r.id !== requestId) return r;
+      return {
+        ...r,
+        workflowType: newWorkflowType,
+        type: newType,
+        // Reset to SPOC approval stage of new workflow
+        stageIndex: Math.min(1, getWorkflowStages(newWorkflowType).length - 1),
+        completedActions: [],
+        rejectionReason: undefined,
+      };
     });
     notify();
   }, []);
@@ -189,5 +205,6 @@ export function useRequestStore() {
     clearRejection,
     scheduleSiteVisit,
     setSdDecision,
+    updateConnectionType,
   };
 }

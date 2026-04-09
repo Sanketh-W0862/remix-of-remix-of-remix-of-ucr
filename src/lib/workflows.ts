@@ -8,47 +8,25 @@ export type WorkflowType =
   | "water-existing-meter"
   | "water-no-meter";
 
-export type PowerMeterType = "postpaid" | "prepaid" | "temporary";
-export type WaterMeterType = "existing" | "new";
-
-export interface SpaceMasterEntry {
-  spaceId: string;
-  powerMeter: PowerMeterType;
-  waterMeter: WaterMeterType;
-  label: string;
-}
-
-// Space Master Configuration
-export const SPACE_MASTER: SpaceMasterEntry[] = [
-  { spaceId: "SP0001", powerMeter: "postpaid", waterMeter: "existing", label: "Postpaid / Existing Water Meter" },
-  { spaceId: "SP0002", powerMeter: "prepaid", waterMeter: "new", label: "Prepaid or Non-Metered / New Water Meter" },
-  { spaceId: "SP0003", powerMeter: "temporary", waterMeter: "new", label: "Temporary / New Water Meter" },
-];
-
-export function getSpaceMeter(spaceId: string): SpaceMasterEntry | undefined {
-  return SPACE_MASTER.find((s) => s.spaceId === spaceId);
-}
+export type PowerConnectionType = "postpaid" | "prepaid" | "temporary";
+export type WaterConnectionType = "existing" | "new";
 
 /**
- * Determine the correct workflow type based on space config and utility.
+ * Determine the correct workflow type based on user-selected connection type.
+ * No space master — user picks the type directly.
  */
 export function resolveWorkflowType(
-  spaceId: string,
   utility: "power" | "water",
-  powerType?: "regular" | "temporary"
+  connectionType?: string
 ): WorkflowType {
-  const spaceCfg = getSpaceMeter(spaceId);
-
   if (utility === "water") {
-    if (spaceCfg && spaceCfg.waterMeter === "new") return "water-no-meter";
+    if (connectionType === "new") return "water-no-meter";
     return "water-existing-meter";
   }
 
   // Power
-  if (spaceCfg) {
-    if (spaceCfg.powerMeter === "temporary" || powerType === "temporary") return "power-temporary";
-    if (spaceCfg.powerMeter === "prepaid") return "power-prepaid";
-  }
+  if (connectionType === "temporary") return "power-temporary";
+  if (connectionType === "prepaid") return "power-prepaid";
   return "power-regular";
 }
 
@@ -133,124 +111,52 @@ const EXPIRY_ACTIONS: WorkflowAction[] = [
 ];
 
 export const WORKFLOWS: Record<WorkflowType, WorkflowStage[]> = {
-  // ── Power: Postpaid (full SD + meter flow) ──
   "power-regular": [
     { id: "submitted", label: "Submitted", userActionRequired: false },
     { id: "spoc-approval", label: "SPOC Approval", userActionRequired: false },
     { id: "sd-decision", label: "SD Decision", userActionRequired: false },
-    {
-      id: "sd-payment",
-      label: "SD Payment",
-      userActionRequired: true,
-      actions: [SD_UPLOAD_ACTION],
-    },
+    { id: "sd-payment", label: "SD Payment", userActionRequired: true, actions: [SD_UPLOAD_ACTION] },
     { id: "finance-confirms", label: "Finance Confirms", userActionRequired: false },
-    {
-      id: "customer-meter-upload",
-      label: "Meter Purchase & Calibration",
-      userActionRequired: true,
-      actions: METER_ACTIONS,
-    },
+    { id: "customer-meter-upload", label: "Meter Purchase & Calibration", userActionRequired: true, actions: METER_ACTIONS },
     { id: "calibration-uploaded", label: "Calibration Certificate Uploaded", userActionRequired: false },
     { id: "slotting", label: "Slotting", userActionRequired: false },
-    {
-      id: "site-visit-form",
-      label: "Site Visit Form",
-      userActionRequired: false,
-      actions: [SITE_VISIT_FORM_ACTION],
-    },
+    { id: "site-visit-form", label: "Site Visit Form", userActionRequired: false, actions: [SITE_VISIT_FORM_ACTION] },
     { id: "activated", label: "Connection Activated", userActionRequired: false },
   ],
-
-  // ── Power: Prepaid / Non-Metered (short flow) ──
   "power-prepaid": [
     { id: "submitted", label: "Submitted", userActionRequired: false },
     { id: "spoc-approval", label: "SPOC Approval", userActionRequired: false },
     { id: "slotting", label: "Slot Selection (P&E)", userActionRequired: false },
-    {
-      id: "site-visit-form",
-      label: "Site Visit Form",
-      userActionRequired: false,
-      actions: [NON_METERED_SITE_VISIT_FORM_ACTION],
-    },
+    { id: "site-visit-form", label: "Site Visit Form", userActionRequired: false, actions: [NON_METERED_SITE_VISIT_FORM_ACTION] },
     { id: "activated", label: "Connection Activated", userActionRequired: false },
   ],
-
-  // ── Power: Temporary ──
   "power-temporary": [
     { id: "submitted", label: "Submitted", userActionRequired: false },
     { id: "sd-calculation", label: "SD Calculation", userActionRequired: false },
-    {
-      id: "sd-payment",
-      label: "SD Payment",
-      userActionRequired: true,
-      actions: [SD_UPLOAD_ACTION],
-    },
-    {
-      id: "meter-recommendation",
-      label: "Meter Recommendation",
-      userActionRequired: true,
-      actions: METER_ACTIONS,
-    },
+    { id: "sd-payment", label: "SD Payment", userActionRequired: true, actions: [SD_UPLOAD_ACTION] },
+    { id: "meter-recommendation", label: "Meter Recommendation", userActionRequired: true, actions: METER_ACTIONS },
     { id: "calibration-uploaded", label: "Calibration Certificate Uploaded", userActionRequired: false },
     { id: "slotting", label: "Slotting", userActionRequired: false },
-    {
-      id: "site-visit-form",
-      label: "Site Visit Form",
-      userActionRequired: false,
-      actions: [SITE_VISIT_FORM_ACTION],
-    },
+    { id: "site-visit-form", label: "Site Visit Form", userActionRequired: false, actions: [SITE_VISIT_FORM_ACTION] },
     { id: "activated", label: "Temp Activated", userActionRequired: false },
-    {
-      id: "expiry-notification",
-      label: "Expiry Notification",
-      userActionRequired: true,
-      actions: EXPIRY_ACTIONS,
-    },
+    { id: "expiry-notification", label: "Expiry Notification", userActionRequired: true, actions: EXPIRY_ACTIONS },
   ],
-
-  // ── Water: Existing Meter Path ──
   "water-existing-meter": [
     { id: "submitted", label: "Submitted", userActionRequired: false },
     { id: "spoc-approval", label: "SPOC Approval", userActionRequired: false },
     { id: "slotting", label: "Slot Selection (P&E)", userActionRequired: false },
-    {
-      id: "site-visit-form",
-      label: "Water Site Visit Form",
-      userActionRequired: false,
-      actions: [WATER_SITE_VISIT_FORM_ACTION],
-    },
+    { id: "site-visit-form", label: "Water Site Visit Form", userActionRequired: false, actions: [WATER_SITE_VISIT_FORM_ACTION] },
     { id: "activated", label: "Water Activated", userActionRequired: false },
   ],
-
-  // ── Water: New Meter Path ──
   "water-no-meter": [
     { id: "submitted", label: "Submitted", userActionRequired: false },
     { id: "spoc-approval", label: "SPOC Approval", userActionRequired: false },
-    {
-      id: "meter-purchase",
-      label: "Meter Purchase Proof",
-      userActionRequired: true,
-      actions: [
-        {
-          label: "Upload Calibration Certificate",
-          type: "upload",
-          fields: [{ name: "calibration_cert", label: "Calibration Certificate", type: "file" }],
-        },
-      ],
-    },
+    { id: "meter-purchase", label: "Meter Purchase Proof", userActionRequired: true, actions: [{ label: "Upload Calibration Certificate", type: "upload", fields: [{ name: "calibration_cert", label: "Calibration Certificate", type: "file" }] }] },
     { id: "calibration-uploaded", label: "Calibration Certificate Uploaded", userActionRequired: false },
     { id: "slotting", label: "Schedule Site Visit (P&E)", userActionRequired: false },
-    {
-      id: "site-visit-form",
-      label: "Water Site Visit Form",
-      userActionRequired: false,
-      actions: [WATER_SITE_VISIT_FORM_ACTION],
-    },
+    { id: "site-visit-form", label: "Water Site Visit Form", userActionRequired: false, actions: [WATER_SITE_VISIT_FORM_ACTION] },
     { id: "activated", label: "Water Activated", userActionRequired: false },
   ],
-
-  // Legacy "water" kept as alias to existing-meter for old seed data
   water: [
     { id: "submitted", label: "Submitted", userActionRequired: false },
     { id: "spoc-approval", label: "SPOC Approval", userActionRequired: false },
@@ -273,7 +179,6 @@ export function getTimelineLabels(type: WorkflowType): string[] {
   return WORKFLOWS[type].map((s) => s.label);
 }
 
-/** Human-readable workflow path label */
 export function getWorkflowLabel(type: WorkflowType): string {
   const labels: Record<WorkflowType, string> = {
     "power-regular": "Power – Postpaid Meter",
@@ -285,3 +190,12 @@ export function getWorkflowLabel(type: WorkflowType): string {
   };
   return labels[type];
 }
+
+/** All possible connection type options for SPOC editing */
+export const CONNECTION_TYPE_OPTIONS: { value: WorkflowType; label: string; utility: string }[] = [
+  { value: "power-regular", label: "Power – Postpaid", utility: "Power" },
+  { value: "power-prepaid", label: "Power – Prepaid / Non-Metered", utility: "Power" },
+  { value: "power-temporary", label: "Power – Temporary", utility: "Power" },
+  { value: "water-existing-meter", label: "Water – Existing Meter", utility: "Water" },
+  { value: "water-no-meter", label: "Water – New Meter", utility: "Water" },
+];

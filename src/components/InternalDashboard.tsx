@@ -374,7 +374,7 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
                         <div>
                           <h3 className="font-semibold text-foreground">{req.id}</h3>
                           <p className="text-sm text-muted-foreground">
-                            {req.utility} • {req.type} • {req.space}
+                            {req.utility} • {req.type} • {req.addressId}
                           </p>
                         </div>
                       </div>
@@ -448,9 +448,9 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
                               <span className="text-muted-foreground">Workflow:</span>
                               <span className="ml-2 text-foreground">{getWorkflowLabel(req.workflowType)}</span>
                             </div>
-                            <div>
-                              <span className="text-muted-foreground">Space ID:</span>
-                              <span className="ml-2 text-foreground">{req.space}</span>
+                            <div className="col-span-2">
+                              <span className="text-muted-foreground">Address:</span>
+                              <span className="ml-2 text-foreground">{req.address} ({req.addressId})</span>
                             </div>
                             <div>
                               <span className="text-muted-foreground">Current Stage:</span>

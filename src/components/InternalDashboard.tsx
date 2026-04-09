@@ -3,14 +3,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap, Droplets, CheckCircle2, Clock, AlertCircle, BarChart3,
   LogOut, FileText, XCircle, MessageSquare, ChevronDown, ChevronUp, CalendarIcon,
-  Upload, ShieldCheck, Hash, Search, Plus,
+  Upload, ShieldCheck, Hash, Search, Plus, Pencil,
 } from "lucide-react";
 import { useCcRequestStore, type CcRequest } from "@/lib/ccRequestStore";
 import { format } from "date-fns";
 import type { UserRole } from "@/lib/roles";
 import { STAGE_ROLE_MAP } from "@/lib/roles";
 import { useRequestStore, type ConnectionRequest, type SdDecision } from "@/lib/requestStore";
-import { getWorkflowStages, getCurrentStage, getTimelineLabels, getWorkflowLabel } from "@/lib/workflows";
+import { getWorkflowStages, getCurrentStage, getTimelineLabels, getWorkflowLabel, CONNECTION_TYPE_OPTIONS } from "@/lib/workflows";
+import type { WorkflowType } from "@/lib/workflows";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -25,7 +26,7 @@ interface InternalDashboardProps {
 type DashFilter = "pending" | "all" | "completed";
 
 const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps) => {
-  const { requests, advanceStage, rejectRequest, scheduleSiteVisit, setSdDecision } = useRequestStore();
+  const { requests, advanceStage, rejectRequest, scheduleSiteVisit, setSdDecision, updateConnectionType } = useRequestStore();
   const ccStore = useCcRequestStore();
   const [rejectModalId, setRejectModalId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
@@ -39,6 +40,10 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
   const [sdAmountValue, setSdAmountValue] = useState<string>("");
   const [actionModalReqId, setActionModalReqId] = useState<string | null>(null);
   const [actionModalAction, setActionModalAction] = useState<WorkflowAction | null>(null);
+
+  // SPOC connection type editing
+  const [editTypeReqId, setEditTypeReqId] = useState<string | null>(null);
+  const [editTypeValue, setEditTypeValue] = useState<WorkflowType | "">("");
 
   // CC approval state (finance only)
   const [ccExpandedId, setCcExpandedId] = useState<string | null>(null);

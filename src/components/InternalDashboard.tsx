@@ -932,6 +932,75 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
           action={actionModalAction}
         />
       )}
+
+      {/* Edit Connection Type Modal (SPOC only) */}
+      <AnimatePresence>
+        {editTypeReqId && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          >
+            <div className="absolute inset-0 bg-foreground/40 backdrop-blur-sm" onClick={() => setEditTypeReqId(null)} />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative z-10 w-full max-w-md glass-card-elevated p-6"
+            >
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center">
+                  <Pencil className="w-5 h-5 text-warning" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold font-display text-foreground">Edit Connection Type</h3>
+                  <p className="text-sm text-muted-foreground">{editTypeReqId}</p>
+                </div>
+              </div>
+
+              <p className="text-sm text-muted-foreground mb-4">Change the connection type for this request. The workflow will be updated accordingly.</p>
+
+              <div className="space-y-2">
+                {CONNECTION_TYPE_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setEditTypeValue(opt.value)}
+                    className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
+                      editTypeValue === opt.value
+                        ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                        : "border-border hover:border-primary/20"
+                    }`}
+                  >
+                    <p className="font-semibold text-sm text-foreground">{opt.label}</p>
+                    <p className="text-xs text-muted-foreground">{opt.utility}</p>
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button onClick={() => setEditTypeReqId(null)} className="btn-secondary flex-1">Cancel</button>
+                <button
+                  onClick={() => {
+                    if (editTypeReqId && editTypeValue) {
+                      const opt = CONNECTION_TYPE_OPTIONS.find((o) => o.value === editTypeValue);
+                      if (opt) {
+                        updateConnectionType(editTypeReqId, editTypeValue as WorkflowType, opt.label.split(" – ")[1] || opt.label);
+                      }
+                      setEditTypeReqId(null);
+                      setEditTypeValue("");
+                    }
+                  }}
+                  disabled={!editTypeValue}
+                  className="flex-1 gradient-bg text-primary-foreground px-6 py-3 rounded-xl font-semibold transition-all hover:opacity-90 disabled:opacity-50"
+                >
+                  Update Type
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -665,6 +665,16 @@ const InternalDashboard = ({ role, roleLabel, onLogout }: InternalDashboardProps
                     {/* Action Buttons - only for pending requests assigned to this role */}
                     {isMine && (
                       <div className="flex gap-2 pt-3 border-t border-border/50">
+                        {/* SPOC: Edit Connection Type button */}
+                        {role === "spoc" && currentStage.id === "spoc-approval" && (
+                          <button
+                            onClick={() => { setEditTypeReqId(req.id); setEditTypeValue(req.workflowType); }}
+                            className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold bg-warning/10 text-warning hover:bg-warning/20 transition-all active:scale-[0.97]"
+                            title="Edit Connection Type"
+                          >
+                            <Pencil className="w-4 h-4" /> Edit Type
+                          </button>
+                        )}
                         <button
                           onClick={() => handleApprove(req.id)}
                           className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold bg-success/10 text-success hover:bg-success/20 transition-all active:scale-[0.97]"
